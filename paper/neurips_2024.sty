@@ -1,0 +1,120 @@
+% neurips_2024.sty - Style file for NeurIPS 2024
+% Based on the official NeurIPS style
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2024}[2024/01/01 NeurIPS 2024 Style]
+
+% Options
+\newif\if@neuripsfinal\@neuripsfinalfalse
+\DeclareOption{final}{\@neuripsfinaltrue}
+\newif\if@preprint\@preprintfalse
+\DeclareOption{preprint}{\@preprinttrue}
+\newif\if@nonatbib\@nonatbibfalse
+\DeclareOption{nonatbib}{\@nonatbibtrue}
+\ProcessOptions\relax
+
+% Fonts and encoding
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage{times}
+
+% Page layout
+\RequirePackage[verbose=true,letterpaper]{geometry}
+\AtBeginDocument{
+  \newgeometry{
+    textheight=9in,
+    textwidth=5.5in,
+    top=1in,
+    headheight=12pt,
+    headsep=25pt,
+    footskip=30pt
+  }
+}
+
+% Line spacing
+\RequirePackage{setspace}
+\setstretch{1.0}
+
+% Natbib
+\if@nonatbib\else
+  \RequirePackage[numbers,compress,sort]{natbib}
+\fi
+
+% Hyperref
+\RequirePackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=red,
+  citecolor=blue,
+  urlcolor=magenta
+}
+
+% Title formatting
+\def\@maketitle{%
+  \vbox to \titlebox{%
+    \vskip 0.5in
+    \begin{center}%
+      {\LARGE\bfseries \@title \par}%
+      \vskip 0.3in
+      \if@neuripsfinal
+        {\large
+          \lineskip .5em%
+          \begin{tabular}[t]{c}%
+            \@author
+          \end{tabular}\par}%
+      \else
+        \if@preprint
+          {\large
+            \lineskip .5em%
+            \begin{tabular}[t]{c}%
+              \@author
+            \end{tabular}\par}%
+        \else
+          {\large Anonymous Author(s)\par}%
+        \fi
+      \fi
+      \vskip 0.3in
+    \end{center}%
+    \vfil
+  }%
+}
+
+\newlength{\titlebox}
+\setlength{\titlebox}{2.5in}
+
+% Abstract
+\renewenvironment{abstract}%
+{%
+  \centerline{\large\bfseries Abstract}%
+  \vspace{0.5ex}%
+  \begin{quote}%
+}
+{
+  \par%
+  \end{quote}%
+  \vskip 1ex%
+}
+
+% Section formatting
+\RequirePackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{1em}{}
+
+% Footnote formatting
+\renewcommand{\footnoterule}{\kern-3pt \hrule width 0.4\columnwidth \kern 2.6pt}
+
+% Paragraph formatting
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5ex plus 0.2ex minus 0.1ex}
+
+% Float placement
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.7}
+
+\endinput
