@@ -4,9 +4,9 @@ __pycache__/
 *.pyo
 
 # Runtime caches & outputs
-A-mem/cached_memories_*/
-A-mem/logs/
-A-mem/results/
+code/cached_memories_*/
+code/logs/
+code/results/
 
 # LaTeX build artifacts
 paper/*.aux
