@@ -351,7 +351,7 @@ class LiteLLMController(BaseLLMController):
 class LLMController:
     """LLM-based controller for memory metadata generation"""
     def __init__(self, 
-                 backend: Literal["openai", "ollama", "sglang"] = "sglang",
+                 backend: Literal["openai", "ollama", "sglang", "litellm"] = "sglang",
                  model: str = "gpt-4", 
                  api_key: Optional[str] = None,
                  api_base: Optional[str] = None,
@@ -370,8 +370,10 @@ class LLMController:
         elif backend == "sglang":
             # Direct SGLang API calls (better performance, no proxy)
             self.llm = SGLangController(model, sglang_host, sglang_port)
+        elif backend == "litellm":
+            self.llm = LiteLLMController(model=model, api_base=api_base, api_key=api_key or "EMPTY")
         else:
-            raise ValueError("Backend must be 'openai', 'ollama', or 'sglang'")
+            raise ValueError("Backend must be 'openai', 'ollama', 'sglang', or 'litellm'")
 
 class MemoryNote:
     """Basic memory unit with metadata"""
@@ -1010,6 +1012,41 @@ class AgenticMemorySystem:
                     break
                 j += 1
         return memory_str
+
+    def export_graph_json(self) -> dict:
+        """Export memory graph in NetworkX node-link JSON format."""
+        nodes = []
+        memories_list = list(self.memories.values())
+
+        for idx, note in enumerate(memories_list):
+            nodes.append({
+                'id': note.id,
+                'idx': idx,
+                'content': note.content[:200],
+                'keywords': note.keywords,
+                'tags': note.tags,
+                'context': note.context,
+                'importance_score': note.importance_score,
+                'retrieval_count': note.retrieval_count,
+                'timestamp': note.timestamp,
+            })
+
+        edges = []
+        for idx, note in enumerate(memories_list):
+            for link_idx in note.links:
+                if isinstance(link_idx, int) and 0 <= link_idx < len(memories_list):
+                    edges.append({
+                        'source': note.id,
+                        'target': memories_list[link_idx].id,
+                    })
+
+        return {
+            'directed': True,
+            'multigraph': False,
+            'graph': {'node_count': len(nodes), 'edge_count': len(edges)},
+            'nodes': nodes,
+            'links': edges,
+        }
 
 def run_tests():
     """Run system tests"""

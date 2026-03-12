@@ -26,5 +26,9 @@ python-dotenv
 # Experiment tracking (optional)
 wandb
 
+# Graph analysis
+networkx
+pyvis
+
 # Testing
 pytest

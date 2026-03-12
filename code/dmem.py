@@ -241,6 +241,13 @@ class DopamineMemorySystem(AgenticMemorySystem):
             'store_size': len(self.memories),
         }
 
+    def export_graph_json(self) -> dict:
+        """Export graph with D-MEM routing metadata and STM buffer info."""
+        data = super().export_graph_json()
+        data['graph']['routing'] = self.get_routing_summary()
+        data['graph']['stm_buffer_size'] = len(self.stm_buffer)
+        return data
+
 
 # Alias so we don't shadow the builtin `time` parameter name
 time_module_time = time.time

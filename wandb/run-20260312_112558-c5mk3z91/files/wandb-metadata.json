@@ -1,0 +1,50 @@
+{
+  "os": "macOS-26.3.1-arm64-arm-64bit",
+  "python": "CPython 3.11.7",
+  "startedAt": "2026-03-12T18:25:58.930235Z",
+  "args": [
+    "--model",
+    "gpt-4o-mini",
+    "--method",
+    "d-mem",
+    "--noise",
+    "0",
+    "--router_mode",
+    "rpe",
+    "--ratio",
+    "0.1",
+    "--wandb"
+  ],
+  "program": "/Users/yurusong/Documents/dmem/scripts/run_eval.py",
+  "codePath": "scripts/run_eval.py",
+  "git": {
+    "remote": "https://github.com/london-and-tequila/dmem.git",
+    "commit": "29fb141562d18b1c0770c70f86c02f2e166cd0c9"
+  },
+  "email": "yurukristensong@gmail.com",
+  "root": "/Users/yurusong/Documents/dmem",
+  "host": "Yurus-MacBook-Pro.local",
+  "username": "yurusong",
+  "executable": "/opt/homebrew/opt/python@3.11/bin/python3.11",
+  "codePathLocal": "scripts/run_eval.py",
+  "cpu_count": 12,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "494384795648",
+      "used": "355336392704"
+    },
+    "/System/Volumes/Data": {
+      "total": "494384795648",
+      "used": "355336392704"
+    }
+  },
+  "memory": {
+    "total": "19327352832"
+  },
+  "cpu": {
+    "count": 12,
+    "countLogical": 12
+  },
+  "apple": {}
+}

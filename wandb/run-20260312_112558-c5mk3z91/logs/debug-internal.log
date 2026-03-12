@@ -1,0 +1,16 @@
+{"time":"2026-03-12T11:25:58.931026-07:00","level":"INFO","msg":"using version","core version":"0.19.0"}
+{"time":"2026-03-12T11:25:58.93106-07:00","level":"INFO","msg":"created symlink","path":"/Users/yurusong/Documents/dmem/wandb/run-20260312_112558-c5mk3z91/logs/debug-core.log"}
+{"time":"2026-03-12T11:25:59.246265-07:00","level":"INFO","msg":"created new stream","id":"c5mk3z91"}
+{"time":"2026-03-12T11:25:59.246326-07:00","level":"INFO","msg":"stream: started","id":"c5mk3z91"}
+{"time":"2026-03-12T11:25:59.246371-07:00","level":"INFO","msg":"handler: started","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:25:59.246385-07:00","level":"INFO","msg":"writer: Do: started","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:25:59.246394-07:00","level":"INFO","msg":"sender: started","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:26:02.406823-07:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2026-03-12T11:26:04.121096-07:00","level":"INFO","msg":"stream: closing","id":"c5mk3z91"}
+{"time":"2026-03-12T11:26:04.121128-07:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2026-03-12T11:26:04.121399-07:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2026-03-12T11:26:04.982284-07:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-03-12T11:26:05.607793-07:00","level":"INFO","msg":"handler: closed","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:26:05.607802-07:00","level":"INFO","msg":"writer: Close: closed","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:26:05.607809-07:00","level":"INFO","msg":"sender: closed","stream_id":"c5mk3z91"}
+{"time":"2026-03-12T11:26:05.607983-07:00","level":"INFO","msg":"stream: closed","id":"c5mk3z91"}

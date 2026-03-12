@@ -1,0 +1,23 @@
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_setup.py:_flush():68] Current SDK version is 0.19.0
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_setup.py:_flush():68] Configure stats pid to 46521
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_setup.py:_flush():68] Loading settings from /Users/yurusong/.config/wandb/settings
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_setup.py:_flush():68] Loading settings from /Users/yurusong/Documents/dmem/wandb/settings
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_setup.py:_flush():68] Loading settings from environment variables
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:_log_setup():528] Logging user logs to /Users/yurusong/Documents/dmem/wandb/run-20260312_112558-c5mk3z91/logs/debug.log
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:_log_setup():529] Logging internal logs to /Users/yurusong/Documents/dmem/wandb/run-20260312_112558-c5mk3z91/logs/debug-internal.log
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:init():639] calling init triggers
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:init():645] wandb.init called with sweep_config: {}
+config: {'model': 'gpt-4o-mini', 'method': 'd-mem', 'noise_ratio': 0, 'backend': 'openai', 'dataset_dir': '/Users/yurusong/Documents/dmem/scripts/../data/locomo_noise/', 'output_dir': '/Users/yurusong/Documents/dmem/scripts/../results/dmem/', 'log_dir': '/Users/yurusong/Documents/dmem/scripts/../logs/', 'ratio': 0.1, 'retrieve_k': 10, 'temperature_c5': 0.5, 'sglang_host': 'http://localhost', 'sglang_port': 30000, 'cache_db': None, 'no_cache': False, 'wandb': True, 'wandb_group': None, 'noise': 0, 'router_mode': 'rpe', 'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.7, 'export_graph': True, 'no_export_graph': False, 'git_hash': '29fb141'}
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:init():688] starting backend
+2026-03-12 11:25:58,896 INFO    MainThread:46521 [wandb_init.py:init():692] sending inform_init request
+2026-03-12 11:25:58,929 INFO    MainThread:46521 [backend.py:_multiprocessing_setup():104] multiprocessing start_methods=spawn,fork,forkserver, using: spawn
+2026-03-12 11:25:58,930 INFO    MainThread:46521 [wandb_init.py:init():705] backend started and connected
+2026-03-12 11:25:58,941 INFO    MainThread:46521 [wandb_init.py:init():798] updated telemetry
+2026-03-12 11:25:58,968 INFO    MainThread:46521 [wandb_init.py:init():830] communicating run to backend with 90.0 second timeout
+2026-03-12 11:26:02,403 INFO    MainThread:46521 [wandb_init.py:init():882] starting run threads in backend
+2026-03-12 11:26:02,524 INFO    MainThread:46521 [wandb_run.py:_console_start():2443] atexit reg
+2026-03-12 11:26:02,524 INFO    MainThread:46521 [wandb_run.py:_redirect():2293] redirect: wrap_raw
+2026-03-12 11:26:02,524 INFO    MainThread:46521 [wandb_run.py:_redirect():2358] Wrapping output streams.
+2026-03-12 11:26:02,525 INFO    MainThread:46521 [wandb_run.py:_redirect():2383] Redirects installed.
+2026-03-12 11:26:02,526 INFO    MainThread:46521 [wandb_init.py:init():925] run started, returning control to user process
+2026-03-12 11:26:04,121 WARNING MsgRouterThr:46521 [router.py:message_loop():75] message_loop has been closed
