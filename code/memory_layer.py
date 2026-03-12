@@ -17,6 +17,8 @@ from litellm import completion
 import requests
 import json as json_lib
 import time
+import re
+from llm_cache import retry_on_rate_limit, get_global_cache, LLMCache
 
 def simple_tokenize(text):
     return word_tokenize(text)
@@ -102,7 +104,8 @@ class OpenAIController(BaseLLMController):
         except ImportError:
             raise ImportError("OpenAI package not found. Install it with: pip install openai")
 
-    def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+    @retry_on_rate_limit()
+    def _raw_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
         t0 = time.time()
         response = self.client.chat.completions.create(
             model=self.model,
@@ -119,6 +122,18 @@ class OpenAIController(BaseLLMController):
         if usage:
             token_tracker.record(usage.prompt_tokens, usage.completion_tokens, latency_ms)
         return response.choices[0].message.content
+
+    def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        cache = get_global_cache()
+        if cache is not None:
+            key = LLMCache.make_key(prompt, self.model, temperature, response_format)
+            cached = cache.get(key)
+            if cached is not None:
+                return cached
+        result = self._raw_completion(prompt, response_format, temperature)
+        if cache is not None and result:
+            cache.put(key, result, prompt, self.model)
+        return result
 
 class OllamaController(BaseLLMController):
     def __init__(self, model: str = "llama2"):
@@ -152,20 +167,34 @@ class OllamaController(BaseLLMController):
         
         return result
 
+    @retry_on_rate_limit()
+    def _raw_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        response = completion(
+            model="ollama_chat/{}".format(self.model),
+            messages=[
+                {"role": "system", "content": "You must respond with a JSON object."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format=response_format,
+        )
+        return response.choices[0].message.content
+
     def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        cache = get_global_cache()
+        if cache is not None:
+            key = LLMCache.make_key(prompt, self.model, temperature, response_format)
+            cached = cache.get(key)
+            if cached is not None:
+                return cached
         try:
-            response = completion(
-                model="ollama_chat/{}".format(self.model),
-                messages=[
-                    {"role": "system", "content": "You must respond with a JSON object."},
-                    {"role": "user", "content": prompt}
-                ],
-                response_format=response_format,
-            )
-            return response.choices[0].message.content
+            result = self._raw_completion(prompt, response_format, temperature)
         except Exception as e:
+            print(f"Ollama completion error: {e}")
             empty_response = self._generate_empty_response(response_format)
             return json.dumps(empty_response)
+        if cache is not None and result:
+            cache.put(key, result, prompt, self.model)
+        return result
 
 class SGLangController(BaseLLMController):
     def __init__(self, model: str = "llama2", sglang_host: str = "http://localhost", sglang_port: int = 30000):
@@ -201,43 +230,54 @@ class SGLangController(BaseLLMController):
         
         return result
 
-    def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
-        try:
-            # Extract JSON schema from response_format and convert to string format
-            json_schema = response_format.get("json_schema", {}).get("schema", {})
-            json_schema_str = json.dumps(json_schema)
-            
-            # Prepare SGLang request with correct format
-            payload = {
-                "text": prompt,
-                "sampling_params": {
-                    "temperature": temperature,
-                    "max_new_tokens": 1000,
-                    "json_schema": json_schema_str  # SGLang expects JSON schema as string
-                }
+    @retry_on_rate_limit()
+    def _raw_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        # Extract JSON schema from response_format and convert to string format
+        json_schema = response_format.get("json_schema", {}).get("schema", {})
+        json_schema_str = json.dumps(json_schema)
+
+        # Prepare SGLang request with correct format
+        payload = {
+            "text": prompt,
+            "sampling_params": {
+                "temperature": temperature,
+                "max_new_tokens": 1000,
+                "json_schema": json_schema_str  # SGLang expects JSON schema as string
             }
-            
-            # Make request to SGLang server
-            response = requests.post(
-                f"{self.base_url}/generate",
-                headers={"Content-Type": "application/json"},
-                json=payload,
-                timeout=60
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                # SGLang returns the generated text in 'text' field
-                generated_text = result.get("text", "")
-                return generated_text
-            else:
-                print(f"SGLang server returned status {response.status_code}: {response.text}")
-                raise Exception(f"SGLang server error: {response.status_code}")
-                
+        }
+
+        # Make request to SGLang server
+        response = requests.post(
+            f"{self.base_url}/generate",
+            headers={"Content-Type": "application/json"},
+            json=payload,
+            timeout=60
+        )
+
+        if response.status_code == 200:
+            result = response.json()
+            generated_text = result.get("text", "")
+            return generated_text
+        else:
+            print(f"SGLang server returned status {response.status_code}: {response.text}")
+            raise Exception(f"SGLang server error: {response.status_code}")
+
+    def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        cache = get_global_cache()
+        if cache is not None:
+            key = LLMCache.make_key(prompt, self.model, temperature, response_format)
+            cached = cache.get(key)
+            if cached is not None:
+                return cached
+        try:
+            result = self._raw_completion(prompt, response_format, temperature)
         except Exception as e:
             print(f"SGLang completion error: {e}")
             empty_response = self._generate_empty_response(response_format)
             return json.dumps(empty_response)
+        if cache is not None and result:
+            cache.put(key, result, prompt, self.model)
+        return result
 
 class LiteLLMController(BaseLLMController):
     """LiteLLM controller for universal LLM access including Ollama and SGLang"""
@@ -273,32 +313,40 @@ class LiteLLMController(BaseLLMController):
         
         return result
 
+    @retry_on_rate_limit()
+    def _raw_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        completion_args = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": "You must respond with a JSON object."},
+                {"role": "user", "content": prompt}
+            ],
+            "response_format": response_format,
+            "temperature": temperature
+        }
+        if self.api_base:
+            completion_args["api_base"] = self.api_base
+        if self.api_key:
+            completion_args["api_key"] = self.api_key
+        response = completion(**completion_args)
+        return response.choices[0].message.content
+
     def get_completion(self, prompt: str, response_format: dict, temperature: float = 0.7) -> str:
+        cache = get_global_cache()
+        if cache is not None:
+            key = LLMCache.make_key(prompt, self.model, temperature, response_format)
+            cached = cache.get(key)
+            if cached is not None:
+                return cached
         try:
-            # Prepare completion arguments
-            completion_args = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "You must respond with a JSON object."},
-                    {"role": "user", "content": prompt}
-                ],
-                "response_format": response_format,
-                "temperature": temperature
-            }
-            
-            # Add API base and key if provided
-            if self.api_base:
-                completion_args["api_base"] = self.api_base
-            if self.api_key:
-                completion_args["api_key"] = self.api_key
-                
-            response = completion(**completion_args)
-            return response.choices[0].message.content
-            
+            result = self._raw_completion(prompt, response_format, temperature)
         except Exception as e:
             print(f"LiteLLM completion error: {e}")
             empty_response = self._generate_empty_response(response_format)
             return json.dumps(empty_response)
+        if cache is not None and result:
+            cache.put(key, result, prompt, self.model)
+        return result
 
 class LLMController:
     """LLM-based controller for memory metadata generation"""
@@ -459,7 +507,6 @@ class MemoryNote:
             
         except Exception as e:
             print(f"Error analyzing content: {str(e)}")
-            print(f"Raw response: {response}")
             return {
                 "keywords": [],
                 "context": "General",
