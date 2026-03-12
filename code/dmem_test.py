@@ -13,6 +13,8 @@ import pickle
 import logging
 import argparse
 import random
+import subprocess
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -21,6 +23,13 @@ from dataclasses import dataclass
 
 import numpy as np
 from tqdm import tqdm
+
+try:
+    import wandb
+    HAS_WANDB = True
+except ImportError:
+    wandb = None
+    HAS_WANDB = False
 
 from memory_layer import (
     LLMController, AgenticMemorySystem, token_tracker,
@@ -167,6 +176,81 @@ def flatten_turns(sample) -> List[dict]:
     return turns
 
 
+def build_metadata(args, start_time, end_time):
+    """Build experiment metadata dict for traceability."""
+    try:
+        git_hash = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip() or "unknown"
+    except Exception:
+        git_hash = "unknown"
+    return {
+        'run_id': uuid.uuid4().hex[:12],
+        'git_hash': git_hash,
+        'start_time': start_time.isoformat(),
+        'end_time': end_time.isoformat(),
+        'runtime_seconds': round((end_time - start_time).total_seconds(), 2),
+        'cli_args': {k: str(v) for k, v in vars(args).items()},
+    }
+
+
+def save_experiment_result(data, args, experiment_tag, start_time, end_time):
+    """Save experiment result with metadata envelope and dual file naming."""
+    metadata = build_metadata(args, start_time, end_time)
+    data['metadata'] = metadata
+
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    # Stable filename (backward-compatible for analyzer)
+    stable_path = os.path.join(args.output_dir, f'{experiment_tag}.json')
+    with open(stable_path, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    # Semantic filename with model + timestamp
+    model_tag = args.model.replace('/', '-')
+    ts = end_time.strftime('%m%d_%H%M')
+    semantic_name = f'{experiment_tag}_{model_tag}_{ts}.json'
+    semantic_path = os.path.join(args.output_dir, semantic_name)
+    with open(semantic_path, 'w') as f:
+        json.dump(data, f, indent=2)
+
+    return semantic_path
+
+
+def _wandb_enabled() -> bool:
+    return HAS_WANDB and wandb.run is not None
+
+
+def _wandb_init(args, experiment: str):
+    if not HAS_WANDB or not getattr(args, 'wandb', False):
+        return
+    model_tag = args.model.replace('/', '-')
+    ts = datetime.now().strftime('%m%d_%H%M')
+    try:
+        git_hash = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        ).stdout.strip() or "unknown"
+    except Exception:
+        git_hash = "unknown"
+    wandb.init(
+        project="d-mem",
+        name=f"{experiment}_{model_tag}_{ts}",
+        config={**vars(args), 'git_hash': git_hash, 'experiment': experiment},
+        tags=[experiment, args.model, args.backend],
+    )
+
+
+def _wandb_finish_and_upload(semantic_path: str):
+    if not _wandb_enabled():
+        return
+    artifact = wandb.Artifact(name=Path(semantic_path).stem, type="experiment-result")
+    artifact.add_file(semantic_path)
+    wandb.log_artifact(artifact)
+    wandb.finish()
+
+
 def create_agent(method: str, model: str, backend: str, retrieve_k: int,
                  temperature_c5: float, ablation_cfg: dict = None,
                  sglang_host: str = "http://localhost", sglang_port: int = 30000):
@@ -220,80 +304,19 @@ def evaluate_qa(agent, qa_list, logger):
 
 
 # ---------------------------------------------------------------------------
-# Experiment 1: Standard LoCoMo Benchmark (parallelized)
+# Experiment 1: Standard LoCoMo Benchmark
 # ---------------------------------------------------------------------------
 
-def _run_exp1_sample(task):
-    """Worker function for a single exp1 sample. Runs in a separate process."""
-    sidx, sample, args_dict = task
-
-    # Per-worker logger (console only — main process handles the file log)
-    logger = setup_logger(f'exp1_w{sidx}')
-
-    t0 = time.time()
-    token_tracker.reset()
-
-    agent = create_agent('D-MEM', args_dict['model'], args_dict['backend'],
-                         args_dict['retrieve_k'], args_dict['temperature_c5'],
-                         sglang_host=args_dict['sglang_host'],
-                         sglang_port=args_dict['sglang_port'])
-
-    # Ingest conversations
-    turns = flatten_turns(sample)
-    for t in turns:
-        agent.add_memory(t['text'], time=t['time'])
-
-    # QA
-    res, _ = evaluate_qa(agent, sample.qa, logger)
-
-    metrics_list = []
-    cats_list = []
-    for r in res:
-        if r['metrics']:
-            metrics_list.append(r['metrics'])
-            cats_list.append(r['category'])
-
-    routing = {}
-    if hasattr(agent.memory_system, 'get_routing_summary'):
-        routing = agent.memory_system.get_routing_summary()
-
-    tokens = token_tracker.snapshot()
-    elapsed = time.time() - t0
-
-    return {
-        'sample_idx': sidx,
-        'results': res,
-        'metrics': metrics_list,
-        'categories': cats_list,
-        'routing': routing,
-        'tokens': tokens,
-        'elapsed_sec': elapsed,
-    }
-
-
 def run_exp1(args):
-    """Exp 1: D-MEM on standard LoCoMo10 (Table 1). Parallelized across samples."""
-    from multiprocessing import Pool
-
+    """Exp 1: D-MEM on standard LoCoMo10 (Table 1). Sequential execution."""
+    start_time = datetime.now()
     logger = setup_logger('exp1', os.path.join(args.log_dir, 'exp1.log'))
-    logger.info("=== Experiment 1: LoCoMo Main Benchmark (parallel) ===")
+    logger.info("=== Experiment 1: LoCoMo Main Benchmark ===")
+    _wandb_init(args, 'exp1')
 
     samples = load_locomo_dataset(args.dataset)
     if args.ratio < 1.0:
         samples = samples[:max(1, int(len(samples) * args.ratio))]
-
-    # Serialisable args for worker processes
-    args_dict = {
-        'model': args.model,
-        'backend': args.backend,
-        'retrieve_k': args.retrieve_k,
-        'temperature_c5': args.temperature_c5,
-        'sglang_host': args.sglang_host,
-        'sglang_port': args.sglang_port,
-    }
-
-    tasks = [(sidx, sample, args_dict) for sidx, sample in enumerate(samples)]
-    NUM_WORKERS = min(10, len(samples))
 
     all_results = []
     all_metrics_list = []
@@ -305,28 +328,62 @@ def run_exp1(args):
         'call_count': 0,
     }
 
-    logger.info(f"Running {len(samples)} samples with {NUM_WORKERS} parallel workers")
+    logger.info(f"Running {len(samples)} samples sequentially")
 
-    with Pool(NUM_WORKERS) as pool:
-        done = 0
-        for output in pool.imap_unordered(_run_exp1_sample, tasks):
-            done += 1
-            sidx = output['sample_idx']
+    for sidx, sample in enumerate(tqdm(samples, desc='exp1')):
+        t0 = time.time()
+        token_tracker.reset()
 
-            all_results.extend(output['results'])
-            all_metrics_list.extend(output['metrics'])
-            all_cats.extend(output['categories'])
+        agent = create_agent('D-MEM', args.model, args.backend,
+                             args.retrieve_k, args.temperature_c5,
+                             sglang_host=args.sglang_host,
+                             sglang_port=args.sglang_port)
 
-            # Aggregate token usage
-            for k in ('total_prompt_tokens', 'total_completion_tokens',
-                      'total_tokens', 'call_count'):
-                total_tokens[k] += output['tokens'].get(k, 0)
+        # Ingest conversations
+        turns = flatten_turns(sample)
+        for t in turns:
+            agent.add_memory(t['text'], time=t['time'])
 
-            logger.info(
-                f"[{done}/{len(samples)} done] Sample {sidx} finished in "
-                f"{output['elapsed_sec']:.1f}s | tokens: {output['tokens']} | "
-                f"routing: {output['routing']}"
-            )
+        # QA
+        res, _ = evaluate_qa(agent, sample.qa, logger)
+
+        metrics_list = [r['metrics'] for r in res if r['metrics']]
+        cats_list = [r['category'] for r in res if r['metrics']]
+        all_results.extend(res)
+        all_metrics_list.extend(metrics_list)
+        all_cats.extend(cats_list)
+
+        routing = {}
+        if hasattr(agent.memory_system, 'get_routing_summary'):
+            routing = agent.memory_system.get_routing_summary()
+
+        tokens = token_tracker.snapshot()
+        elapsed = time.time() - t0
+
+        for k in ('total_prompt_tokens', 'total_completion_tokens',
+                  'total_tokens', 'call_count'):
+            total_tokens[k] += tokens.get(k, 0)
+
+        # W&B: per-sample real-time log
+        if _wandb_enabled():
+            sample_agg = aggregate_metrics(metrics_list, cats_list) if metrics_list else {}
+            overall = sample_agg.get('overall', {})
+            wandb.log({
+                'sample_f1': overall.get('f1', {}).get('mean', 0),
+                'sample_bleu1': overall.get('bleu1', {}).get('mean', 0),
+                'sample_bert_f1': overall.get('bert_f1', {}).get('mean', 0),
+                'sample_tokens': tokens.get('total_tokens', 0),
+                'sample_elapsed_sec': elapsed,
+                'routing_skip_pct': routing.get('skip_pct', 0),
+                'routing_construct_pct': routing.get('construct_pct', 0),
+                'routing_evolve_pct': routing.get('evolve_pct', 0),
+                'cumulative_tokens': total_tokens['total_tokens'],
+            })
+
+        logger.info(
+            f"[{sidx+1}/{len(samples)}] Sample {sidx} finished in "
+            f"{elapsed:.1f}s | tokens: {tokens} | routing: {routing}"
+        )
 
     overall_agg = aggregate_metrics(all_metrics_list, all_cats) if all_metrics_list else {}
 
@@ -337,12 +394,21 @@ def run_exp1(args):
         'total_tokens': total_tokens,
         'results': all_results,
     }
+    semantic_path = save_experiment_result(output, args, 'exp1_dmem', start_time, datetime.now())
     out_path = os.path.join(args.output_dir, 'exp1_dmem.json')
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(out_path, 'w') as f:
-        json.dump(output, f, indent=2)
+
+    # W&B: summary + artifact upload
+    if _wandb_enabled():
+        wandb.run.summary.update({
+            'final_f1': overall_agg.get('overall', {}).get('f1', {}).get('mean', 0),
+            'final_bleu1': overall_agg.get('overall', {}).get('bleu1', {}).get('mean', 0),
+            'final_bert_f1': overall_agg.get('overall', {}).get('bert_f1', {}).get('mean', 0),
+            'total_tokens': total_tokens['total_tokens'],
+        })
+    _wandb_finish_and_upload(semantic_path)
 
     logger.info(f"Exp1 results saved to {out_path}")
+    logger.info(f"Exp1 semantic copy: {semantic_path}")
     logger.info(f"Aggregate metrics: {json.dumps(overall_agg, indent=2)}")
     logger.info(f"Total tokens: {total_tokens}")
 
@@ -353,72 +419,12 @@ def run_exp1(args):
 # Experiment 2: Scalability & Cost
 # ---------------------------------------------------------------------------
 
-def _run_exp2_unit(task):
-    """Worker: one (method, sample, group) pair for exp2. Runs in a separate process."""
-    method, sidx, sample, args_dict, max_turns, noise_ratio, group_name = task
-
-    token_tracker.reset()
-    agent = create_agent(method, args_dict['model'], args_dict['backend'],
-                         args_dict['retrieve_k'], args_dict['temperature_c5'],
-                         sglang_host=args_dict['sglang_host'],
-                         sglang_port=args_dict['sglang_port'])
-
-    turns = flatten_turns(sample)
-    turn_texts = [t['text'] for t in turns]
-    turn_times = [t['time'] for t in turns]
-
-    # Inject noise if needed
-    if noise_ratio > 0:
-        noisy_texts, _ = inject_noise(turn_texts, noise_ratio, seed=42 + sidx)
-        while len(turn_times) < len(noisy_texts):
-            turn_times.append(turn_times[-1] if turn_times else "")
-        turn_texts = noisy_texts
-
-    # Truncate
-    turn_texts = turn_texts[:max_turns]
-    turn_times = turn_times[:max_turns]
-
-    t_start = time.time()
-    sample_log = []
-    for t_idx in range(len(turn_texts)):
-        token_tracker.get_turn_token_cost()  # reset checkpoint
-        t0 = time.time()
-        agent.add_memory(turn_texts[t_idx],
-                         time=turn_times[t_idx] if t_idx < len(turn_times) else None)
-        latency = time.time() - t0
-        turn_tokens = token_tracker.get_turn_token_cost()
-        sample_log.append({
-            'turn': t_idx + 1,
-            'latency_sec': latency,
-            'tokens': turn_tokens,
-            'cumulative_tokens': token_tracker.total_tokens,
-        })
-
-    routing = {}
-    if hasattr(agent, 'memory_system') and hasattr(agent.memory_system, 'get_routing_summary'):
-        routing = agent.memory_system.get_routing_summary()
-
-    return {
-        'method': method,
-        'group': group_name,
-        'key': f"{method}_{group_name}",
-        'sample_idx': sidx,
-        'total_turns': len(turn_texts),
-        'per_turn': sample_log,
-        'final_tokens': token_tracker.snapshot(),
-        'final_calls': token_tracker.call_count,
-        'store_size': len(agent.memory_system.memories) if hasattr(agent, 'memory_system') else -1,
-        'routing': routing,
-        'elapsed_sec': time.time() - t_start,
-    }
-
-
 def run_exp2(args):
-    """Exp 2: Turn-by-turn scalability (Figure 1a/1b + Table 2). Parallelized."""
-    from multiprocessing import Pool
-
+    """Exp 2: Turn-by-turn scalability (Figure 1a/1b + Table 2). Sequential execution."""
+    start_time = datetime.now()
     logger = setup_logger('exp2', os.path.join(args.log_dir, 'exp2.log'))
-    logger.info("=== Experiment 2: Scalability & Cost (parallel) ===")
+    logger.info("=== Experiment 2: Scalability & Cost ===")
+    _wandb_init(args, 'exp2')
 
     samples = load_locomo_dataset(args.dataset)
     if args.ratio < 1.0:
@@ -433,59 +439,98 @@ def run_exp2(args):
     if args.include_noise_group:
         groups['noise_50'] = 0.5
 
-    # Serialisable args for worker processes
-    args_dict = {
-        'model': args.model,
-        'backend': args.backend,
-        'retrieve_k': args.retrieve_k,
-        'temperature_c5': args.temperature_c5,
-        'sglang_host': args.sglang_host,
-        'sglang_port': args.sglang_port,
-    }
-
-    # Build task list: all (method, sample, group) combinations
-    tasks = []
-    for group_name, noise_ratio in groups.items():
-        for method in methods:
-            for sidx, sample in enumerate(samples):
-                tasks.append((method, sidx, sample, args_dict, max_turns,
-                              noise_ratio, group_name))
-
-    NUM_WORKERS = min(10, len(tasks))
-    logger.info(f"Running {len(tasks)} tasks with {NUM_WORKERS} parallel workers")
+    total_tasks = len(groups) * len(methods) * len(samples)
+    logger.info(f"Running {total_tasks} tasks sequentially")
 
     all_logs = defaultdict(list)
 
-    with Pool(NUM_WORKERS) as pool:
-        done = 0
-        for output in pool.imap_unordered(_run_exp2_unit, tasks):
-            done += 1
-            key = output['key']
-            all_logs[key].append({
-                'sample_idx': output['sample_idx'],
-                'total_turns': output['total_turns'],
-                'per_turn': output['per_turn'],
-                'final_tokens': output['final_tokens'],
-                'final_calls': output['final_calls'],
-                'store_size': output['store_size'],
-                'routing': output.get('routing', {}),
-            })
-            logger.info(
-                f"[{done}/{len(tasks)} done] {key} sample {output['sample_idx']} "
-                f"finished in {output['elapsed_sec']:.1f}s | "
-                f"turns: {output['total_turns']} | "
-                f"tokens: {output['final_tokens']} | "
-                f"routing: {output.get('routing', {})}"
-            )
+    for group_name, noise_ratio in groups.items():
+        for method in methods:
+            key = f"{method}_{group_name}"
+            for sidx, sample in enumerate(tqdm(samples, desc=key)):
+                token_tracker.reset()
+                agent = create_agent(method, args.model, args.backend,
+                                     args.retrieve_k, args.temperature_c5,
+                                     sglang_host=args.sglang_host,
+                                     sglang_port=args.sglang_port)
+
+                turns = flatten_turns(sample)
+                turn_texts = [t['text'] for t in turns]
+                turn_times = [t['time'] for t in turns]
+
+                # Inject noise if needed
+                if noise_ratio > 0:
+                    noisy_texts, _ = inject_noise(turn_texts, noise_ratio, seed=42 + sidx)
+                    while len(turn_times) < len(noisy_texts):
+                        turn_times.append(turn_times[-1] if turn_times else "")
+                    turn_texts = noisy_texts
+
+                # Truncate
+                turn_texts = turn_texts[:max_turns]
+                turn_times = turn_times[:max_turns]
+
+                t_start = time.time()
+                sample_log = []
+                for t_idx in range(len(turn_texts)):
+                    token_tracker.get_turn_token_cost()  # reset checkpoint
+                    t0 = time.time()
+                    agent.add_memory(turn_texts[t_idx],
+                                     time=turn_times[t_idx] if t_idx < len(turn_times) else None)
+                    latency = time.time() - t0
+                    turn_tokens = token_tracker.get_turn_token_cost()
+                    sample_log.append({
+                        'turn': t_idx + 1,
+                        'latency_sec': latency,
+                        'tokens': turn_tokens,
+                        'cumulative_tokens': token_tracker.total_tokens,
+                    })
+
+                    # W&B: per-turn real-time log
+                    if _wandb_enabled():
+                        wandb.log({
+                            f'{key}/latency': latency,
+                            f'{key}/turn_tokens': turn_tokens,
+                            f'{key}/cumulative_tokens': token_tracker.total_tokens,
+                        })
+
+                routing = {}
+                if hasattr(agent, 'memory_system') and hasattr(agent.memory_system, 'get_routing_summary'):
+                    routing = agent.memory_system.get_routing_summary()
+
+                elapsed = time.time() - t_start
+                all_logs[key].append({
+                    'sample_idx': sidx,
+                    'total_turns': len(turn_texts),
+                    'per_turn': sample_log,
+                    'final_tokens': token_tracker.snapshot(),
+                    'final_calls': token_tracker.call_count,
+                    'store_size': len(agent.memory_system.memories) if hasattr(agent, 'memory_system') else -1,
+                    'routing': routing,
+                })
+                logger.info(
+                    f"[{key}] sample {sidx} finished in {elapsed:.1f}s | "
+                    f"turns: {len(turn_texts)} | "
+                    f"tokens: {token_tracker.snapshot()} | "
+                    f"routing: {routing}"
+                )
 
     # Convert defaultdict to regular dict for JSON serialization
     all_logs = dict(all_logs)
 
+    semantic_path = save_experiment_result(all_logs, args, 'exp2_scalability', start_time, datetime.now())
     out_path = os.path.join(args.output_dir, 'exp2_scalability.json')
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(out_path, 'w') as f:
-        json.dump(all_logs, f, indent=2)
+
+    # W&B: summary + artifact upload
+    if _wandb_enabled():
+        for key, logs in all_logs.items():
+            if key == 'metadata':
+                continue
+            avg_tokens = np.mean([l['final_tokens'].get('total_tokens', 0) for l in logs]) if logs else 0
+            wandb.run.summary.update({f'{key}/avg_tokens': avg_tokens})
+    _wandb_finish_and_upload(semantic_path)
+
     logger.info(f"Exp2 results saved to {out_path}")
+    logger.info(f"Exp2 semantic copy: {semantic_path}")
     return all_logs
 
 
@@ -493,63 +538,12 @@ def run_exp2(args):
 # Experiment 3: Noise Robustness
 # ---------------------------------------------------------------------------
 
-def _run_exp3_unit(task):
-    """Worker: one (method, noise_ratio, sample) for exp3. Runs in a separate process."""
-    method, sidx, sample, args_dict, noise_ratio, noise_key = task
-
-    logger = setup_logger(f'exp3_w{noise_key}_{sidx}')
-    t0 = time.time()
-    token_tracker.reset()
-
-    agent = create_agent(method, args_dict['model'], args_dict['backend'],
-                         args_dict['retrieve_k'], args_dict['temperature_c5'],
-                         sglang_host=args_dict['sglang_host'],
-                         sglang_port=args_dict['sglang_port'])
-
-    turns = flatten_turns(sample)
-    turn_texts = [t['text'] for t in turns]
-    turn_times = [t['time'] for t in turns]
-
-    if noise_ratio > 0:
-        noisy_texts, _ = inject_noise(turn_texts, noise_ratio, seed=42 + sidx)
-        while len(turn_times) < len(noisy_texts):
-            turn_times.append(turn_times[-1] if turn_times else "")
-        turn_texts = noisy_texts
-
-    for i, txt in enumerate(turn_texts):
-        agent.add_memory(txt, time=turn_times[i] if i < len(turn_times) else None)
-
-    # Evaluate on original QAs
-    res, _ = evaluate_qa(agent, sample.qa, logger)
-    metrics_list = [r['metrics'] for r in res if r['metrics']]
-    cats_list = [r['category'] for r in res if r['metrics']]
-
-    store_size = len(agent.memory_system.memories) if hasattr(agent, 'memory_system') else -1
-    routing = {}
-    if hasattr(agent, 'memory_system') and hasattr(agent.memory_system, 'get_routing_summary'):
-        routing = agent.memory_system.get_routing_summary()
-
-    return {
-        'noise_key': noise_key,
-        'method': method,
-        'noise_ratio': noise_ratio,
-        'sample_idx': sidx,
-        'results': res,
-        'metrics': metrics_list,
-        'categories': cats_list,
-        'store_size': store_size,
-        'routing': routing,
-        'tokens': token_tracker.snapshot(),
-        'elapsed_sec': time.time() - t0,
-    }
-
-
 def run_exp3(args):
-    """Exp 3: Noise robustness (Figure 2). Parallelized across (method, noise_ratio, sample)."""
-    from multiprocessing import Pool
-
+    """Exp 3: Noise robustness (Figure 2). Sequential execution."""
+    start_time = datetime.now()
     logger = setup_logger('exp3', os.path.join(args.log_dir, 'exp3.log'))
-    logger.info("=== Experiment 3: Noise Robustness (parallel) ===")
+    logger.info("=== Experiment 3: Noise Robustness ===")
+    _wandb_init(args, 'exp3')
 
     samples = load_locomo_dataset(args.dataset)
     if args.ratio < 1.0:
@@ -560,26 +554,8 @@ def run_exp3(args):
     if args.include_memgpt:
         methods.append('MemGPT')
 
-    # Serialisable args for worker processes
-    args_dict = {
-        'model': args.model,
-        'backend': args.backend,
-        'retrieve_k': args.retrieve_k,
-        'temperature_c5': args.temperature_c5,
-        'sglang_host': args.sglang_host,
-        'sglang_port': args.sglang_port,
-    }
-
-    # Build task list: all (method, noise_ratio, sample) combinations
-    tasks = []
-    for noise_ratio in noise_ratios:
-        for method in methods:
-            noise_key = f"{method}_noise{int(noise_ratio*100)}"
-            for sidx, sample in enumerate(samples):
-                tasks.append((method, sidx, sample, args_dict, noise_ratio, noise_key))
-
-    NUM_WORKERS = min(10, len(tasks))
-    logger.info(f"Running {len(tasks)} tasks with {NUM_WORKERS} parallel workers")
+    total_tasks = len(noise_ratios) * len(methods) * len(samples)
+    logger.info(f"Running {total_tasks} tasks sequentially")
 
     # Collect results grouped by noise_key
     grouped = defaultdict(lambda: {
@@ -587,24 +563,66 @@ def run_exp3(args):
         'store_sizes': [], 'noise_ratio': 0.0, 'method': '',
     })
 
-    with Pool(NUM_WORKERS) as pool:
-        done = 0
-        for output in pool.imap_unordered(_run_exp3_unit, tasks):
-            done += 1
-            nk = output['noise_key']
-            grouped[nk]['results'].extend(output['results'])
-            grouped[nk]['metrics'].extend(output['metrics'])
-            grouped[nk]['categories'].extend(output['categories'])
-            grouped[nk]['store_sizes'].append(output['store_size'])
-            grouped[nk]['noise_ratio'] = output['noise_ratio']
-            grouped[nk]['method'] = output['method']
+    for noise_ratio in noise_ratios:
+        for method in methods:
+            noise_key = f"{method}_noise{int(noise_ratio*100)}"
+            for sidx, sample in enumerate(tqdm(samples, desc=noise_key)):
+                t0 = time.time()
+                token_tracker.reset()
 
-            logger.info(
-                f"[{done}/{len(tasks)} done] {nk} sample {output['sample_idx']} "
-                f"finished in {output['elapsed_sec']:.1f}s | "
-                f"store_size: {output['store_size']} | "
-                f"routing: {output['routing']}"
-            )
+                agent = create_agent(method, args.model, args.backend,
+                                     args.retrieve_k, args.temperature_c5,
+                                     sglang_host=args.sglang_host,
+                                     sglang_port=args.sglang_port)
+
+                turns = flatten_turns(sample)
+                turn_texts = [t['text'] for t in turns]
+                turn_times = [t['time'] for t in turns]
+
+                if noise_ratio > 0:
+                    noisy_texts, _ = inject_noise(turn_texts, noise_ratio, seed=42 + sidx)
+                    while len(turn_times) < len(noisy_texts):
+                        turn_times.append(turn_times[-1] if turn_times else "")
+                    turn_texts = noisy_texts
+
+                for i, txt in enumerate(turn_texts):
+                    agent.add_memory(txt, time=turn_times[i] if i < len(turn_times) else None)
+
+                # Evaluate on original QAs
+                res, _ = evaluate_qa(agent, sample.qa, logger)
+                metrics_list = [r['metrics'] for r in res if r['metrics']]
+                cats_list = [r['category'] for r in res if r['metrics']]
+
+                store_size = len(agent.memory_system.memories) if hasattr(agent, 'memory_system') else -1
+
+                grouped[noise_key]['results'].extend(res)
+                grouped[noise_key]['metrics'].extend(metrics_list)
+                grouped[noise_key]['categories'].extend(cats_list)
+                grouped[noise_key]['store_sizes'].append(store_size)
+                grouped[noise_key]['noise_ratio'] = noise_ratio
+                grouped[noise_key]['method'] = method
+
+                elapsed = time.time() - t0
+
+                # W&B: per-sample log
+                if _wandb_enabled():
+                    sample_agg = aggregate_metrics(metrics_list, cats_list) if metrics_list else {}
+                    overall = sample_agg.get('overall', {})
+                    wandb.log({
+                        'noise_ratio': noise_ratio,
+                        'sample_f1': overall.get('f1', {}).get('mean', 0),
+                        'sample_bert_f1': overall.get('bert_f1', {}).get('mean', 0),
+                        'store_size': store_size,
+                    })
+
+                routing = {}
+                if hasattr(agent, 'memory_system') and hasattr(agent.memory_system, 'get_routing_summary'):
+                    routing = agent.memory_system.get_routing_summary()
+
+                logger.info(
+                    f"[{noise_key}] sample {sidx} finished in {elapsed:.1f}s | "
+                    f"store_size: {store_size} | routing: {routing}"
+                )
 
     # Aggregate per noise_key
     all_results = {}
@@ -619,11 +637,25 @@ def run_exp3(args):
             'results': g['results'],
         }
 
+    semantic_path = save_experiment_result(all_results, args, 'exp3_noise', start_time, datetime.now())
     out_path = os.path.join(args.output_dir, 'exp3_noise.json')
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(out_path, 'w') as f:
-        json.dump(all_results, f, indent=2)
+
+    # W&B: noise robustness summary table + artifact upload
+    if _wandb_enabled():
+        table = wandb.Table(columns=['noise_key', 'method', 'noise_ratio', 'f1', 'bert_f1', 'avg_store_size'])
+        for nk, r in all_results.items():
+            agg = r.get('aggregate', {}).get('overall', {})
+            table.add_data(
+                nk, r['method'], r['noise_ratio'],
+                agg.get('f1', {}).get('mean', 0),
+                agg.get('bert_f1', {}).get('mean', 0),
+                r['avg_store_size'],
+            )
+        wandb.log({'noise_robustness': table})
+    _wandb_finish_and_upload(semantic_path)
+
     logger.info(f"Exp3 results saved to {out_path}")
+    logger.info(f"Exp3 semantic copy: {semantic_path}")
     return all_results
 
 
@@ -633,8 +665,10 @@ def run_exp3(args):
 
 def run_exp4(args):
     """Exp 4: Ablation study (Table 3 + Figure 3)."""
+    start_time = datetime.now()
     logger = setup_logger('exp4', os.path.join(args.log_dir, 'exp4.log'))
     logger.info("=== Experiment 4: Ablation ===")
+    _wandb_init(args, 'exp4')
 
     samples = load_locomo_dataset(args.dataset)
     if args.ratio < 1.0:
@@ -676,6 +710,21 @@ def run_exp4(args):
                 logger.info(f"  {variant_name} sample {sidx} routing: "
                             f"{agent.memory_system.get_routing_summary()}")
 
+            # W&B: per-sample log
+            if _wandb_enabled():
+                sample_agg = aggregate_metrics(
+                    [r['metrics'] for r in res if r['metrics']],
+                    [r['category'] for r in res if r['metrics']],
+                ) if any(r['metrics'] for r in res) else {}
+                overall = sample_agg.get('overall', {})
+                wandb.log({
+                    'variant': variant_name,
+                    'sample_f1': overall.get('f1', {}).get('mean', 0),
+                    'sample_bert_f1': overall.get('bert_f1', {}).get('mean', 0),
+                    'sample_tokens': token_tracker.total_tokens,
+                    'store_size': len(agent.memory_system.memories),
+                })
+
         overall_agg = aggregate_metrics(variant_metrics, variant_cats) if variant_metrics else {}
         all_results[variant_name] = {
             'config': cfg,
@@ -685,11 +734,40 @@ def run_exp4(args):
             'results': variant_qas,
         }
 
+        # W&B: per-variant summary
+        if _wandb_enabled():
+            v_overall = overall_agg.get('overall', {})
+            wandb.run.summary.update({
+                f'{variant_name}/f1': v_overall.get('f1', {}).get('mean', 0),
+                f'{variant_name}/bert_f1': v_overall.get('bert_f1', {}).get('mean', 0),
+                f'{variant_name}/total_tokens': total_tokens_all,
+                f'{variant_name}/avg_store_size': all_results[variant_name]['avg_store_size'],
+            })
+
+    # W&B: ablation comparison table
+    if _wandb_enabled():
+        table = wandb.Table(columns=[
+            'variant', 'alpha', 'theta_low', 'theta_high', 'rpe_mode',
+            'f1', 'bert_f1', 'total_tokens', 'avg_store_size',
+        ])
+        for vname, r in all_results.items():
+            agg = r.get('aggregate', {}).get('overall', {})
+            c = r['config']
+            table.add_data(
+                vname, c['alpha'], c['theta_low'], c['theta_high'], c['rpe_mode'],
+                agg.get('f1', {}).get('mean', 0),
+                agg.get('bert_f1', {}).get('mean', 0),
+                r['total_tokens'], r['avg_store_size'],
+            )
+        wandb.log({'ablation_table': table})
+
+    semantic_path = save_experiment_result(all_results, args, 'exp4_ablation', start_time, datetime.now())
     out_path = os.path.join(args.output_dir, 'exp4_ablation.json')
-    os.makedirs(args.output_dir, exist_ok=True)
-    with open(out_path, 'w') as f:
-        json.dump(all_results, f, indent=2)
+
+    _wandb_finish_and_upload(semantic_path)
+
     logger.info(f"Exp4 results saved to {out_path}")
+    logger.info(f"Exp4 semantic copy: {semantic_path}")
     return all_results
 
 
@@ -722,6 +800,8 @@ def main():
                         help="Path to LLM cache SQLite DB (default: code/.llm_cache.db)")
     parser.add_argument("--no_cache", action="store_true",
                         help="Disable LLM response caching")
+    parser.add_argument("--wandb", action="store_true",
+                        help="Enable W&B logging")
     args = parser.parse_args()
 
     # Convert relative paths
@@ -748,6 +828,9 @@ def main():
         run_exp2(args)
         run_exp3(args)
         run_exp4(args)
+
+    if HAS_WANDB and wandb.run is not None:
+        wandb.finish()
 
 
 if __name__ == "__main__":

@@ -97,4 +97,4 @@ def inject_noise(turns: List[str],
 
 def get_noise_ratios() -> List[float]:
     """Standard noise ratios for Experiment 3."""
-    return [0.0, 0.2, 0.4, 0.6, 0.8]
+    return [0.4]  # TODO: restore to [0.0, 0.2, 0.4, 0.6, 0.8]

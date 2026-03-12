@@ -23,5 +23,8 @@ matplotlib
 pathlib
 python-dotenv
 
+# Experiment tracking (optional)
+wandb
+
 # Testing
 pytest

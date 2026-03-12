@@ -71,6 +71,8 @@ def print_table2_and_figures(exp2_data, output_dir):
 
     summary = {}
     for key, logs in exp2_data.items():
+        if key == 'metadata':
+            continue
         if not logs:
             continue
         total_calls = sum(l.get('final_calls', 0) for l in logs)
@@ -156,24 +158,30 @@ def print_figure2(exp3_data, output_dir):
     print("\n" + "=" * 80)
     print("FIGURE 2 DATA: Noise Robustness")
     print("=" * 80)
-    print(f"{'Key':<25} {'Noise%':>7} {'F1':>8} {'BERT-F1':>8}")
+    print(f"{'Key':<25} {'Noise%':>7} {'F1':>8} {'BERT-F1':>8} {'Store':>8}")
 
-    method_curves = defaultdict(lambda: {'noise': [], 'f1': [], 'bert_f1': []})
+    method_curves = defaultdict(lambda: {'noise': [], 'f1': [], 'bert_f1': [], 'store': []})
     for key, info in exp3_data.items():
+        if key == 'metadata':
+            continue
         nr = info.get('noise_ratio', 0)
         method = info.get('method', key)
         agg = info.get('aggregate', {}).get('overall', {})
         f1 = agg.get('f1', {}).get('mean', 0)
         bf1 = agg.get('bert_f1', {}).get('mean', 0)
-        print(f"{key:<25} {nr*100:>6.0f}% {f1:>8.4f} {bf1:>8.4f}")
+        avg_store = info.get('avg_store_size', 0)
+        print(f"{key:<25} {nr*100:>6.0f}% {f1:>8.4f} {bf1:>8.4f} {avg_store:>8.1f}")
         method_curves[method]['noise'].append(nr * 100)
         method_curves[method]['f1'].append(f1)
         method_curves[method]['bert_f1'].append(bf1)
+        method_curves[method]['store'].append(avg_store)
 
     if not HAS_MPL:
         return
 
     os.makedirs(output_dir, exist_ok=True)
+
+    # Figure 2: F1 vs Noise Ratio
     fig, ax = plt.subplots(figsize=(8, 5))
     for method, data in method_curves.items():
         order = np.argsort(data['noise'])
@@ -189,6 +197,23 @@ def print_figure2(exp3_data, output_dir):
     fig.savefig(os.path.join(output_dir, 'fig2_noise.png'), dpi=150)
     plt.close(fig)
     print(f"  Saved fig2_noise.png")
+
+    # Figure 2b: Store Size vs Noise Ratio
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for method, data in method_curves.items():
+        order = np.argsort(data['noise'])
+        xs = np.array(data['noise'])[order]
+        ys = np.array(data['store'])[order]
+        ax.plot(xs, ys, marker='s', label=method)
+    ax.set_xlabel('Noise Ratio (%)')
+    ax.set_ylabel('Store Size')
+    ax.set_title('Figure 2b: Store Size vs Noise Ratio')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(os.path.join(output_dir, 'fig2b_store_size.png'), dpi=150)
+    plt.close(fig)
+    print(f"  Saved fig2b_store_size.png")
 
 
 # ---------------------------------------------------------------------------
@@ -208,6 +233,8 @@ def print_table3_and_figure3(exp4_data, output_dir):
     baseline_tokens = None
 
     for variant, info in exp4_data.items():
+        if variant == 'metadata':
+            continue
         agg = info.get('aggregate', {}).get('overall', {})
         f1 = agg.get('f1', {}).get('mean', 0)
         bf1 = agg.get('bert_f1', {}).get('mean', 0)

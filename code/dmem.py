@@ -96,8 +96,12 @@ class CriticRouter:
     def _compute_utility(self, content: str) -> float:
         """Structured-output LLM call to rate long-term factual value (0-10)."""
         prompt = (
-            "Rate 0-10 the long-term factual value of this input for a "
-            f"personal assistant: '{content}'"
+            "Rate 0-10 the long-term memory utility of this user utterance for an AI assistant.\n"
+            "0-2: Conversational filler, meaningless chatter (e.g., 'ok', 'lol', 'thanks').\n"
+            "3-5: Vague statements or immediate context.\n"
+            "6-8: Concrete actions, events, or statements containing specific TIME markers (e.g., 'I went to pottery class yesterday').\n"
+            "9-10: Core persona facts, major preference shifts, or critical relationships.\n"
+            f"Utterance: '{content}'"
         )
         response_format = {
             "type": "json_schema",
