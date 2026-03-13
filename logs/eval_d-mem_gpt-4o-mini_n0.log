@@ -1,2 +1,320 @@
 2026-03-12 11:25:57,202 - INFO - === Eval: method=d-mem model=gpt-4o-mini noise=0 backend=openai ===
 2026-03-12 11:25:57,302 - INFO - Loaded 1 samples from /Users/yurusong/Documents/dmem/scripts/../code/data/locomo10.json
+2026-03-12 11:29:25,077 - INFO - === Eval: method=d-mem model=gpt-4o-mini noise=0 backend=openai ===
+2026-03-12 11:29:25,179 - INFO - Loaded 1 samples from /Users/yurusong/Documents/dmem/scripts/../code/data/locomo10.json
+2026-03-12 11:54:18,654 - INFO -   Q: When did Caroline go to the LGBTQ support group?... | pred: 8 May, 2023 | ref: 7 May 2023
+2026-03-12 11:54:21,167 - INFO -   Q: When did Melanie paint a sunrise?... | pred: last year | ref: 2022
+2026-03-12 11:54:24,079 - INFO -   Q: What fields would Caroline be likely to pursue in her educaton?... | pred: counseling and mental health | ref: Psychology, counseling certification
+2026-03-12 11:54:26,172 - INFO -   Q: What did Caroline research?... | pred: some research | ref: Adoption agencies
+2026-03-12 11:54:28,176 - INFO -   Q: What is Caroline's identity?... | pred: Caroline identifies as a trans woman. | ref: Transgender woman
+2026-03-12 11:54:30,601 - INFO -   Q: When did Melanie run a charity race?... | pred: last Saturday, 20 May 2023 | ref: The sunday before 25 May 2023
+2026-03-12 11:54:33,790 - INFO -   Q: When is Melanie planning on going camping?... | pred: next month | ref: June 2023
+2026-03-12 11:54:36,750 - INFO -   Q: What is Caroline's relationship status?... | pred: ready to be a mom and share my love and family | ref: Single
+2026-03-12 11:54:39,566 - INFO -   Q: When did Caroline give a speech at a school?... | pred: last week on 9 June, 2023 | ref: The week before 9 June 2023
+2026-03-12 11:54:42,103 - INFO -   Q: When did Caroline meet up with her friends, family, and mentors?... | pred: last week on 9 June 2023 | ref: The week before 9 June 2023
+2026-03-12 11:54:44,982 - INFO -   Q: How long has Caroline had her current group of friends for?... | pred: 4 years, since I moved from my home country. | ref: 4 years
+2026-03-12 11:54:47,248 - INFO -   Q: Where did Caroline move from 4 years ago?... | pred: Caroline did not mention where she moved from 4 years ago. | ref: Sweden
+2026-03-12 11:54:49,753 - INFO -   Q: How long ago was Caroline's 18th birthday?... | pred: ten years ago from June 27, 2023 | ref: 10 years ago
+2026-03-12 11:54:51,772 - INFO -   Q: What career path has Caroline decided to persue?... | pred: counseling and mental health | ref: counseling or mental health for Transgender people
+2026-03-12 11:54:54,171 - INFO -   Q: Would Caroline still want to pursue counseling as a career if she hadn't receive... | pred: I want to help people go through it too. | ref: Likely no
+2026-03-12 11:54:56,830 - INFO -   Q: What activities does Melanie partake in?... | pred: I just signed up for a pottery class yesterday. It's like th | ref: pottery, camping, painting, swimming
+2026-03-12 11:54:59,024 - INFO -   Q: When did Melanie sign up for a pottery class?... | pred: yesterday, 2 July 2023 | ref: 2 July 2023
+2026-03-12 11:55:01,110 - INFO -   Q: When is Caroline going to the transgender conference?... | pred: this month | ref: July 2023
+2026-03-12 11:55:03,207 - INFO -   Q: Where has Melanie camped?... | pred: at the beach, in the mountains, and in the forest | ref: beach, mountains, forest
+2026-03-12 11:55:05,166 - INFO -   Q: What do Melanie's kids like?... | pred: spending time together and seeing their eyes light up | ref: dinosaurs, nature
+2026-03-12 11:55:07,785 - INFO -   Q: When did Melanie go to the museum?... | pred: 6 July, 2023 | ref: 5 July 2023
+2026-03-12 11:55:09,784 - INFO -   Q: When did Caroline have a picnic?... | pred: No specific date mentioned. | ref: The week before 6 July 2023
+2026-03-12 11:55:12,772 - INFO -   Q: Would Caroline likely have Dr. Seuss books on her bookshelf?... | pred: I've got lots of kids' books- classics, stories from differe | ref: Yes, since she collects classic children's books
+2026-03-12 11:55:15,507 - INFO -   Q: What books has Melanie read?... | pred: I've been reading that book you recommended a while ago. | ref: "Nothing is Impossible", "Charlotte's Web"
+2026-03-12 11:55:17,374 - INFO -   Q: What does Melanie do to destress?... | pred: painting to keep busy | ref: Running, pottery
+2026-03-12 11:55:19,339 - INFO -   Q: When did Caroline go to the LGBTQ conference?... | pred: 10 July, 2023 | ref: 10 July 2023
+2026-03-12 11:55:21,859 - INFO -   Q: When did Melanie read the book "nothing is impossible"?... | pred: a while ago | ref: 2022
+2026-03-12 11:55:24,360 - INFO -   Q: Would Caroline pursue writing as a career option?... | pred: The content does not mention pursuing writing as a career op | ref: LIkely no; though she likes reading, she wants to be a couns
+2026-03-12 11:55:27,504 - INFO -   Q: When did Caroline go to the adoption meeting?... | pred: 15 July, 2023 | ref: The friday before 15 July 2023
+2026-03-12 11:55:30,064 - INFO -   Q: When did Melanie go to the pottery workshop?... | pred: Last Fri, 14 July 2023. | ref: The Friday before 15 July 2023
+2026-03-12 11:55:32,670 - INFO -   Q: Would Melanie be considered a member of the LGBTQ community?... | pred: The context does not explicitly state Melanie's sexual orien | ref: Likely no, she does not refer to herself as part of it
+2026-03-12 11:55:34,665 - INFO -   Q: When did Melanie go camping in June?... | pred: last week | ref: The week before 27 June 2023
+2026-03-12 11:55:37,315 - INFO -   Q: What LGBTQ+ events has Caroline participated in?... | pred: Caroline has participated in an LGBTQ support group, an LGBT | ref: Pride parade, school speech, support group
+2026-03-12 11:55:39,673 - INFO -   Q: When did Caroline go to a pride parade during the summer?... | pred: a few weeks ago, 15 July, 2023 | ref: The week before 3 July 2023
+2026-03-12 11:55:43,302 - INFO -   Q: What events has Caroline participated in to help children?... | pred: We're putting together a talent show for the kids next month | ref: Mentoring program, school speech
+2026-03-12 11:55:45,771 - INFO -   Q: When did Melanie go camping in July?... | pred: 20 July, 2023 | ref: two weekends before 17 July 2023
+2026-03-12 11:55:47,885 - INFO -   Q: When did Caroline join a mentorship program?... | pred: last weekend, 15 July 2023 | ref: The weekend before 17 July 2023
+2026-03-12 11:55:50,697 - INFO -   Q: What did Melanie paint recently?... | pred: a painting of a sunset with a pink sky and a painting of a s | ref: sunset
+2026-03-12 11:55:53,356 - INFO -   Q: What activities has Melanie done with her family?... | pred: took the kids to the museum, camping at the beach, explored  | ref: Pottery, painting, camping, museum, swimming, hiking
+2026-03-12 11:55:56,279 - INFO -   Q: In what ways is Caroline participating in the LGBTQ community?... | pred: Caroline is participating in the LGBTQ community by joining  | ref: Joining activist group, going to pride parades, participatin
+2026-03-12 11:55:59,076 - INFO -   Q: How many times has Melanie gone to the beach in 2023?... | pred: usually only once or twice a year | ref: 2
+2026-03-12 11:56:01,598 - INFO -   Q: When did Caroline join a new activist group?... | pred: last Tues (13 July 2023) | ref: The Tuesday before 20 July 2023
+2026-03-12 11:56:03,890 - INFO -   Q: Would Melanie be more interested in going to a national park or a theme park?... | pred: exploring nature | ref: National park; she likes the outdoors
+2026-03-12 11:56:07,177 - INFO -   Q: What kind of art does Caroline make?... | pred: Caroline makes paintings, including self-portraits. | ref: abstract art
+2026-03-12 11:56:09,555 - INFO -   Q: When is Melanie's daughter's birthday?... | pred: 14 August, 2023 | ref: 13 August
+2026-03-12 11:56:11,891 - INFO -   Q: When did Caroline attend a pride parade in August?... | pred: Last Friday, 11 August, 2023. | ref: The Friday before 14 August 2023
+2026-03-12 11:56:14,319 - INFO -   Q: Would Melanie be considered an ally to the transgender community?... | pred: Yes, Melanie expresses appreciation and support for Caroline | ref: Yes, she is supportive
+2026-03-12 11:56:17,706 - INFO -   Q: Who supports Caroline when she has a negative experience?... | pred: the support of those close to me | ref: Her mentors, family, and friends
+2026-03-12 11:56:20,055 - INFO -   Q: What types of pottery have Melanie and her kids made?... | pred: pots and clay sculptures | ref: bowls, cup
+2026-03-12 11:56:22,469 - INFO -   Q: When did Caroline and Melanie go to a pride fesetival together?... | pred: last year at the Pride fest | ref: 2022
+2026-03-12 11:56:24,478 - INFO -   Q: What would Caroline's political leaning likely be?... | pred: LGBTQ activist group | ref: Liberal
+2026-03-12 11:56:26,361 - INFO -   Q: What has Melanie painted?... | pred: an abstract painting | ref: Horse, sunset, sunrise
+2026-03-12 11:56:28,347 - INFO -   Q: What are Melanie's pets' names?... | pred: Luna and Oliver | ref: Oliver, Luna, Bailey
+2026-03-12 11:56:30,953 - INFO -   Q: When did Caroline apply to adoption agencies?... | pred: 23 August, 2023 | ref: The week of 23 August 2023
+2026-03-12 11:56:33,497 - INFO -   Q: When did Caroline draw a self-portrait?... | pred: last week, 23 August 2023 | ref: The week before 23 August 2023
+2026-03-12 11:56:35,681 - INFO -   Q: What subject have Caroline and Melanie both painted?... | pred: painting | ref: Sunsets
+2026-03-12 11:56:37,988 - INFO -   Q: What symbols are important to Caroline?... | pred: the rainbow flag, the eagle, and the necklace | ref: Rainbow flag, transgender symbol
+2026-03-12 11:56:40,403 - INFO -   Q: When did Caroline encounter people on a hike and have a negative experience?... | pred: 17 August, 2023 | ref: The week before 25 August 2023
+2026-03-12 11:56:42,827 - INFO -   Q: When did Melanie make a plate in pottery class?... | pred: yesterday, 24 August 2023 | ref: 24 August 2023
+2026-03-12 11:56:45,019 - INFO -   Q: Would Caroline be considered religious?... | pred: The content does not provide any indication of Caroline's re | ref: Somewhat, but not extremely religious
+2026-03-12 11:56:47,556 - INFO -   Q: What instruments does Melanie play?... | pred: Melanie plays clarinet! | ref: clarinet and violin
+2026-03-12 11:56:49,422 - INFO -   Q: What musical artists/bands has Melanie seen?... | pred: Matt Patterson | ref: Summer Sounds, Matt Patterson
+2026-03-12 11:56:52,039 - INFO -   Q: When did Melanie go to the park?... | pred: yesterday on 28 August, 2023 | ref: 27 August 2023
+2026-03-12 11:56:54,979 - INFO -   Q: When is Caroline's youth center putting on a talent show?... | pred: next month | ref: September 2023
+2026-03-12 11:56:57,701 - INFO -   Q: Would Melanie likely enjoy the song "The Four Seasons" by Vivaldi?... | pred: I'm a fan of both classical like Bach and Mozart | ref: Yes; it's classical music
+2026-03-12 11:56:59,896 - INFO -   Q: What are some changes Caroline has faced during her transition journey?... | pred: Transitioning wasn't easy and acceptance wasn't either. | ref: Changes to her body, losing unsupportive friends
+2026-03-12 11:57:02,417 - INFO -   Q: What does Melanie do with her family on hikes?... | pred: The view from the top was amazing! | ref: Roast marshmallows, tell stories
+2026-03-12 11:57:04,869 - INFO -   Q: When did Caroline go biking with friends?... | pred: last weekend | ref: The weekend before 13 September 2023
+2026-03-12 11:57:07,150 - INFO -   Q: How long has Melanie been practicing art?... | pred: Seven years now. | ref: Since 2016
+2026-03-12 11:57:09,335 - INFO -   Q: What personality traits might Melanie say Caroline has?... | pred: caring heart, inspiring, awesome, supportive | ref: Thoughtful, authentic, driven
+2026-03-12 11:57:11,494 - INFO -   Q: What transgender-specific events has Caroline attended?... | pred: a transgender poetry reading, a school event, a transgender  | ref: Poetry reading, conference
+2026-03-12 11:57:14,057 - INFO -   Q: What book did Melanie read from Caroline's suggestion?... | pred: the book you recommended a while ago | ref: "Becoming Nicole"
+2026-03-12 11:57:16,663 - INFO -   Q: When did Melanie's friend adopt a child?... | pred: last year | ref: 2022
+2026-03-12 11:57:18,687 - INFO -   Q: When did Melanie get hurt?... | pred: October 13, 2023 | ref: September 2023
+2026-03-12 11:57:20,865 - INFO -   Q: When did Melanie's family go on a roadtrip?... | pred: yesterday | ref: The weekend before 20 October 2023
+2026-03-12 11:57:23,577 - INFO -   Q: How many children does Melanie have?... | pred: the kids | ref: 3
+2026-03-12 11:57:25,842 - INFO -   Q: When did Melanie go on a hike after the roadtrip?... | pred: We explored nature, roasted marshmallows around the campfire | ref: 19 October 2023
+2026-03-12 11:57:27,790 - INFO -   Q: Would Melanie go on another roadtrip soon?... | pred: we were all freaked when my son got into an accident | ref: Likely no; since this one went badly
+2026-03-12 11:57:29,870 - INFO -   Q: What items has Melanie bought?... | pred: some new shoes | ref: Figurines, shoes
+2026-03-12 11:57:32,418 - INFO -   Q: When did Caroline pass the adoption interview?... | pred: last Friday, 20 October 2023 | ref: The Friday before 22 October 2023
+2026-03-12 11:57:35,118 - INFO -   Q: When did Melanie buy the figurines?... | pred: yesterday, 21 October, 2023 | ref: 21 October 2023
+2026-03-12 11:57:37,583 - INFO -   Q: Would Caroline want to move back to her home country soon?... | pred: It's a lot to take in, but I'm feeling hopeful and optimisti | ref: No; she's in the process of adopting children.
+2026-03-12 11:57:39,663 - INFO -   Q: What did the charity race raise awareness for?... | pred: raising awareness for mental health | ref: mental health
+2026-03-12 11:57:41,750 - INFO -   Q: What did Melanie realize after the charity race?... | pred: self-care is really important | ref: self-care is important
+2026-03-12 11:57:44,053 - INFO -   Q: How does Melanie prioritize self-care?... | pred: I'm carving out some me-time each day - running, reading, or | ref: by carving out some me-time each day for activities like run
+2026-03-12 11:57:47,409 - INFO -   Q: What are Caroline's plans for the summer?... | pred: plan something special for this summer | ref: researching adoption agencies
+2026-03-12 11:57:49,506 - INFO -   Q: What type of individuals does the adoption agency Caroline is considering suppor... | pred: kids who need it | ref: LGBTQ+ individuals
+2026-03-12 11:57:52,235 - INFO -   Q: Why did Caroline choose the adoption agency?... | pred: I hope to build my own family and put a roof over kids who h | ref: because of their inclusivity and support for LGBTQ+ individu
+2026-03-12 11:57:54,758 - INFO -   Q: What is Caroline excited about in the adoption process?... | pred: I'm so excited and thankful. This is a big move towards my g | ref: creating a family for kids who need one
+2026-03-12 11:57:56,958 - INFO -   Q: What does Melanie think about Caroline's decision to adopt?... | pred: Adoption sounds awesome. I'm so happy for you. | ref: she thinks Caroline is doing something amazing and will be a
+2026-03-12 11:57:59,132 - INFO -   Q: How long have Mel and her husband been married?... | pred: 5 years already! | ref: Mel and her husband have been married for 5 years.
+2026-03-12 11:58:01,357 - INFO -   Q: What does Caroline's necklace symbolize?... | pred: love, faith and strength | ref: love, faith, and strength
+2026-03-12 11:58:03,889 - INFO -   Q: What country is Caroline's grandma from?... | pred: Sweden | ref: Sweden
+2026-03-12 11:58:06,196 - INFO -   Q: What was grandma's gift to Caroline?... | pred: a necklace | ref: necklace
+2026-03-12 11:58:08,284 - INFO -   Q: What is Melanie's hand-painted bowl a reminder of?... | pred: art and self-expression | ref: art and self-expression
+2026-03-12 11:58:10,689 - INFO -   Q: What did Melanie and her family do while camping?... | pred: We roasted marshmallows, told stories around the campfire an | ref: explored nature, roasted marshmallows, and went on a hike
+2026-03-12 11:58:13,114 - INFO -   Q: What kind of counseling and mental health services is Caroline interested in pur... | pred: I'm thinking of working with trans people, helping them acce | ref: working with trans people, helping them accept themselves an
+2026-03-12 11:58:15,297 - INFO -   Q: What workshop did Caroline attend recently?... | pred: LGBTQ conference | ref: LGBTQ+ counseling workshop
+2026-03-12 11:58:17,616 - INFO -   Q: What was discussed in the LGBTQ+ counseling workshop?... | pred: different therapeutic methods and how to best work with tran | ref: therapeutic methods and how to best work with trans people
+2026-03-12 11:58:20,359 - INFO -   Q: What motivated Caroline to pursue counseling?... | pred: I struggled with mental health, and support I got was really | ref: her own journey and the support she received, and how counse
+2026-03-12 11:58:22,315 - INFO -   Q: What kind of place does Caroline want to create for people?... | pred: a more inclusive and understanding world | ref: a safe and inviting place for people to grow
+2026-03-12 11:58:24,633 - INFO -   Q: Did Melanie make the black and white bowl in the photo?... | pred: Yeah, I made this bowl in my class. | ref: Yes
+2026-03-12 11:58:26,844 - INFO -   Q: What kind of books does Caroline have in her library?... | pred: lots of kids' books- classics, stories from different cultur | ref: kids' books - classics, stories from different cultures, edu
+2026-03-12 11:58:29,128 - INFO -   Q: What was Melanie's favorite book from her childhood?... | pred: I loved reading 'Charlotte's Web' as a kid. | ref: "Charlotte's Web"
+2026-03-12 11:58:31,745 - INFO -   Q: What book did Caroline recommend to Melanie?... | pred: that book you recommended a while ago | ref: "Becoming Nicole"
+2026-03-12 11:58:34,390 - INFO -   Q: What did Caroline take away from the book "Becoming Nicole"?... | pred: It made me feel connected and gave me a lot of hope for my o | ref: Lessons on self-acceptance and finding support
+2026-03-12 11:58:37,210 - INFO -   Q: What are the new shoes that Melanie got used for?... | pred: Just got some new shoes, too! | ref: Running
+2026-03-12 11:58:39,613 - INFO -   Q: What is Melanie's reason for getting into running?... | pred: a great way to destress and clear my mind | ref: To de-stress and clear her mind
+2026-03-12 11:58:41,960 - INFO -   Q: What does Melanie say running has been great for?... | pred: great for my headspace | ref: Her mental health
+2026-03-12 11:58:44,582 - INFO -   Q: What did Mel and her kids make during the pottery workshop?... | pred: their own pots | ref: pots
+2026-03-12 11:58:47,283 - INFO -   Q: What kind of pot did Mel and her kids make with clay?... | pred: their own pots | ref: a cup with a dog face on it
+2026-03-12 11:58:52,099 - INFO -   Q: What creative project do Mel and her kids do together besides pottery?... | pred: other creative projects | ref: painting
+2026-03-12 11:58:54,614 - INFO -   Q: What did Mel and her kids paint in their latest project in July 2023?... | pred: another painting like our last one | ref: a sunset with a palm tree
+2026-03-12 11:58:56,830 - INFO -   Q: What did Caroline see at the council meeting for adoption?... | pred: It was inspiring and emotional - so many people wanted to cr | ref: many people wanting to create loving homes for children in n
+2026-03-12 11:58:58,915 - INFO -   Q: What do sunflowers represent according to Caroline?... | pred: warmth and happiness | ref: warmth and happiness
+2026-03-12 11:59:01,366 - INFO -   Q: Why are flowers important to Melanie?... | pred: Flowers bring joy. They represent growth, beauty and remind  | ref: They remind her to appreciate the small moments and were a p
+2026-03-12 11:59:04,227 - INFO -   Q: What inspired Caroline's painting for the art show?... | pred: The room was electric with energy and support! The posters w | ref: visiting an LGBTQ center and wanting to capture unity and st
+2026-03-12 11:59:06,368 - INFO -   Q: How often does Melanie go to the beach with her kids?... | pred: usually only once or twice a year | ref: once or twice a year
+2026-03-12 11:59:09,198 - INFO -   Q: What did Melanie and her family see during their camping trip last year?... | pred: the view from the top was amazing | ref: Perseid meteor shower
+2026-03-12 11:59:11,510 - INFO -   Q: How did Melanie feel while watching the meteor shower?... | pred: it felt like we were part of something huge and awe-inspirin | ref: in awe of the universe
+2026-03-12 11:59:14,876 - INFO -   Q: Whose birthday did Melanie celebrate recently?... | pred: my daughter's birthday | ref: Melanie's daughter
+2026-03-12 11:59:17,068 - INFO -   Q: Who performed at the concert at Melanie's daughter's birthday?... | pred: Matt Patterson, he is so talented! | ref: Matt Patterson
+2026-03-12 11:59:19,061 - INFO -   Q: Why did Melanie choose to use colors and patterns in her pottery project?... | pred: to express my emotions | ref: She wanted to catch the eye and make people smile.
+2026-03-12 11:59:20,932 - INFO -   Q: What pet does Caroline have?... | pred: Oscar, my guinea pig. | ref: guinea pig
+2026-03-12 11:59:22,937 - INFO -   Q: What pets does Melanie have?... | pred: a pup and a kitty | ref: Two cats and a dog
+2026-03-12 11:59:25,132 - INFO -   Q: Where did Oliver hide his bone once?... | pred: in my slipper | ref: In Melanie's slipper
+2026-03-12 11:59:27,790 - INFO -   Q: What activity did Caroline used to do with her dad?... | pred: explored nature, roasted marshmallows around the campfire an | ref: Horseback riding
+2026-03-12 11:59:30,542 - INFO -   Q: What did Caroline make for a local church?... | pred: I just contacted my mentor for adoption advice. | ref: a stained glass window
+2026-03-12 11:59:32,793 - INFO -   Q: What did Caroline find in her neighborhood during her walk?... | pred: Love that purple color! | ref: a rainbow sidewalk
+2026-03-12 11:59:35,209 - INFO -   Q: Which song motivates Caroline to be courageous?... | pred: "Brave" by Sara Bareilles has a lot of significance for me.  | ref: Brave by Sara Bareilles
+2026-03-12 11:59:38,462 - INFO -   Q: Which  classical musicians does Melanie enjoy listening to?... | pred: Bach and Mozart | ref: Bach and Mozart
+2026-03-12 11:59:40,558 - INFO -   Q: Who is Melanie a fan of in terms of modern music?... | pred: Ed Sheeran's "Perfect" | ref: Ed Sheeran
+2026-03-12 11:59:42,654 - INFO -   Q: How long has Melanie been creating art?... | pred: Seven years now | ref: 7 years
+2026-03-12 11:59:45,132 - INFO -   Q: What precautionary sign did Melanie see at the café?... | pred: the sign was just a precaution | ref: A sign stating that someone is not being able to leave
+2026-03-12 11:59:47,919 - INFO -   Q: What advice does Caroline give for getting started with adoption?... | pred: Do your research and find an adoption agency or lawyer. They | ref: Do research, find an adoption agency or lawyer, gather neces
+2026-03-12 11:59:49,866 - INFO -   Q: What setback did Melanie face in October 2023?... | pred: last month I got hurt and had to take a break from pottery | ref: She got hurt and had to take a break from pottery.
+2026-03-12 11:59:52,401 - INFO -   Q: What does Melanie do to keep herself busy during her pottery break?... | pred: Pottery is a huge part of my life, not just a hobby - it hel | ref: Read a book and paint.
+2026-03-12 11:59:54,721 - INFO -   Q: What painting did Melanie show to Caroline on October 13, 2023?... | pred: a drawing created by Caroline | ref: A painting inspired by sunsets with a pink sky.
+2026-03-12 11:59:57,209 - INFO -   Q: What kind of painting did Caroline share with Melanie on October 13, 2023?... | pred: a painting of a sunset with a pink sky | ref: An abstract painting with blue streaks on a wall.
+2026-03-12 11:59:59,454 - INFO -   Q: What was the poetry reading that Caroline attended about?... | pred: It was a transgender poetry reading where transgender people | ref: It was a transgender poetry reading where transgender people
+2026-03-12 12:00:01,532 - INFO -   Q: What did the posters at the poetry reading say?... | pred: the posters were amazing, so much pride and strength! | ref: "Trans Lives Matter"
+2026-03-12 12:00:04,024 - INFO -   Q: What does Caroline's drawing symbolize for her?... | pred: It stands for freedom and being real. | ref: Freedom and being true to herself.
+2026-03-12 12:00:06,457 - INFO -   Q: How do Melanie and Caroline describe their journey through life together?... | pred: Life's about learning and exploring. Glad we can be on this  | ref: An ongoing adventure of learning and growing.
+2026-03-12 12:00:10,758 - INFO -   Q: What happened to Melanie's son on their road trip?... | pred: my son got into an accident. We were so lucky he was okay. | ref: He got into an accident
+2026-03-12 12:00:13,398 - INFO -   Q: How did Melanie's son handle the accident?... | pred: we were all freaked when my son got into an accident. We wer | ref: He was scared but reassured by his family
+2026-03-12 12:00:15,566 - INFO -   Q: How did Melanie feel about her family after the accident?... | pred: they bring so much joy and love. | ref: They are important and mean the world to her
+2026-03-12 12:00:17,817 - INFO -   Q: How did Melanie's children handle the accident?... | pred: Thankful my son's ok and that was a reminder that life is pr | ref: They were scared but resilient
+2026-03-12 12:00:20,262 - INFO -   Q: How did Melanie feel after the accident?... | pred: we were all freaked... It was a real scary experience. | ref: Grateful and thankful for her family
+2026-03-12 12:00:22,713 - INFO -   Q: What was Melanie's reaction to her children enjoying the Grand Canyon?... | pred: They enjoyed the Grand Canyon a lot! | ref: She was happy and thankful
+2026-03-12 12:00:25,328 - INFO -   Q: What do Melanie's family give her?... | pred: joy and love | ref: Strength and motivation
+2026-03-12 12:00:27,662 - INFO -   Q: How did Melanie feel about her family supporting her?... | pred: My fam's been awesome - they helped out and showed lots of l | ref: She appreciated them a lot
+2026-03-12 12:00:30,517 - INFO -   Q: What did Melanie do after the road trip to relax?... | pred: The kids loved it and it was a nice way to relax after the r | ref: Went on a nature walk or hike
+2026-03-12 12:00:32,768 - INFO -   Q: What did Caroline realize after her charity race?... | pred: Not mentioned in the conversation | ref: self-care is important
+2026-03-12 12:00:35,386 - INFO -   Q: What are Melanie's plans for the summer with respect to adoption?... | pred: Not mentioned in the conversation | ref: researching adoption agencies
+2026-03-12 12:00:38,007 - INFO -   Q: What type of individuals does the adoption agency Melanie is considering support... | pred: Not mentioned in the conversation | ref: LGBTQ+ individuals
+2026-03-12 12:00:40,147 - INFO -   Q: Why did Melanie choose the adoption agency?... | pred: Not mentioned in the conversation | ref: because of their inclusivity and support for LGBTQ+ individu
+2026-03-12 12:00:42,427 - INFO -   Q: What is Melanie excited about in her adoption process?... | pred: Not mentioned in the conversation | ref: creating a family for kids who need one
+2026-03-12 12:00:45,052 - INFO -   Q: What does Melanie's necklace symbolize?... | pred: Not mentioned in the conversation | ref: love, faith, and strength
+2026-03-12 12:00:47,147 - INFO -   Q: What country is Melanie's grandma from?... | pred: Sweden | ref: Sweden
+2026-03-12 12:00:49,437 - INFO -   Q: What was grandma's gift to Melanie?... | pred: Not mentioned in the conversation | ref: necklace
+2026-03-12 12:00:52,596 - INFO -   Q: What was grandpa's gift to Caroline?... | pred: necklace | ref: necklace
+2026-03-12 12:00:55,196 - INFO -   Q: What is Caroline's hand-painted bowl a reminder of?... | pred: art and self-expression | ref: art and self-expression
+2026-03-12 12:00:57,416 - INFO -   Q: What did Caroline and her family do while camping?... | pred: explored nature, roasted marshmallows, and went on a hike | ref: explored nature, roasted marshmallows, and went on a hike
+2026-03-12 12:01:00,301 - INFO -   Q: What kind of counseling and mental health services is Melanie interested in purs... | pred: Not mentioned in the conversation | ref: working with trans people, helping them accept themselves an
+2026-03-12 12:01:02,573 - INFO -   Q: What kind of counseling workshop did Melanie attend recently?... | pred: LGBTQ+ counseling workshop | ref: LGBTQ+ counseling workshop
+2026-03-12 12:01:04,695 - INFO -   Q: What motivated Melanie to pursue counseling?... | pred: Not mentioned in the conversation | ref: her own journey and the support she received, and how counse
+2026-03-12 12:01:07,077 - INFO -   Q: What kind of place does Melanie want to create for people?... | pred: a safe and inviting place for people to grow | ref: a safe and inviting place for people to grow
+2026-03-12 12:01:09,372 - INFO -   Q: Did Caroline make the black and white bowl in the photo?... | pred: Not mentioned in the conversation | ref: Yes
+2026-03-12 12:01:11,554 - INFO -   Q: What are the new shoes that Caroline got used for?... | pred: Not mentioned in the conversation | ref: Running
+2026-03-12 12:01:13,947 - INFO -   Q: What is Caroline's reason for getting into running?... | pred: Not mentioned in the conversation | ref: To de-stress and clear her mind
+2026-03-12 12:01:15,852 - INFO -   Q: What does Caroline say running has been great for?... | pred: Her mental health | ref: Her mental health
+2026-03-12 12:01:17,858 - INFO -   Q: What did Melanie see at the council meeting for adoption?... | pred: many people wanting to create loving homes for children in n | ref: many people wanting to create loving homes for children in n
+2026-03-12 12:01:20,047 - INFO -   Q: What inspired Melanie's painting for the art show?... | pred: Not mentioned in the conversation | ref: visiting an LGBTQ center and wanting to capture unity and st
+2026-03-12 12:01:22,270 - INFO -   Q: What inspired Caroline's sculpture for the art show?... | pred: Not mentioned in the conversation | ref: visiting an LGBTQ center and wanting to capture unity and st
+2026-03-12 12:01:24,484 - INFO -   Q: How often does Caroline go to the beach with her kids?... | pred: Not mentioned in the conversation | ref: once or twice a year
+2026-03-12 12:01:26,771 - INFO -   Q: What did Caroline and her family see during their camping trip last year?... | pred: Not mentioned in the conversation | ref: Perseid meteor shower
+2026-03-12 12:01:29,136 - INFO -   Q: How did Caroline feel while watching the meteor shower?... | pred: Not mentioned in the conversation | ref: in awe of the universe
+2026-03-12 12:02:15,965 - INFO -   Q: Why did Caroline choose to use colors and patterns in her pottery project?... | pred: Not mentioned in the conversation | ref: She wanted to catch the eye and make people smile.
+2026-03-12 12:03:02,508 - INFO -   Q: Is Oscar Melanie's pet?... | pred: Not mentioned in the conversation | ref: Yes
+2026-03-12 12:03:59,730 - INFO -   Q: Where did Oscar hide his bone once?... | pred: In Melanie's slipper | ref: In Melanie's slipper
+2026-03-12 12:05:05,395 - INFO -   Q: What activity did Melanie used to do with her dad?... | pred: Not mentioned in the conversation | ref: Horseback riding
+2026-03-12 12:05:16,408 - INFO -   Q: What did Melanie make for a local church?... | pred: Not mentioned in the conversation | ref: a stained glass window
+2026-03-12 12:06:48,124 - INFO -   Q: What did Melanie find in her neighborhood during her walk?... | pred: Not mentioned in the conversation | ref: a rainbow sidewalk
+2026-03-12 12:08:46,794 - INFO -   Q: Which song motivates Melanie to be courageous?... | pred: Not mentioned in the conversation | ref: Brave by Sara Bareilles
+2026-03-12 12:08:57,849 - INFO -   Q: What type of instrument does Caroline play?... | pred: Caroline plays acoustic guitar. | ref: clarinet and violin
+2026-03-12 12:09:26,914 - INFO -   Q: Which classical musicians does Caroline enjoy listening to?... | pred: Not mentioned in the conversation | ref: Bach and Mozart
+2026-03-12 12:09:41,359 - INFO -   Q: Who is Caroline a fan of in terms of modern music?... | pred: Ed Sheeran | ref: Ed Sheeran
+2026-03-12 12:11:04,324 - INFO -   Q: What precautionary sign did Caroline see at the café?... | pred: A sign stating that someone is not being able to leave | ref: A sign stating that someone is not being able to leave
+2026-03-12 12:11:33,027 - INFO -   Q: What setback did Caroline face recently?... | pred: Not mentioned in the conversation | ref: She got hurt and had to take a break from pottery.
+2026-03-12 12:11:54,204 - INFO -   Q: What does Caroline do to keep herself busy during her pottery break?... | pred: Read a book and paint. | ref: Read a book and paint.
+2026-03-12 12:12:41,007 - INFO -   Q: What was the poetry reading that Melanie attended about?... | pred: Not mentioned in the conversation | ref: It was a transgender poetry reading where transgender people
+2026-03-12 12:12:55,260 - INFO -   Q: What happened to Caroline's son on their road trip?... | pred: Not mentioned in the conversation | ref: He got into an accident
+2026-03-12 12:13:24,324 - INFO -   Q: How did Caroline's son handle the accident?... | pred: Not mentioned in the conversation | ref: He was scared but reassured by his family
+2026-03-12 12:14:56,437 - INFO -   Q: How did Caroline feel about her family after the accident?... | pred: They are important and mean the world to her | ref: They are important and mean the world to her
+2026-03-12 12:16:10,113 - INFO -   Q: How did Caroline's children handle the accident?... | pred: Not mentioned in the conversation | ref: They were scared but resilient
+2026-03-12 12:16:59,760 - INFO -   Q: How did Caroline feel after the accident?... | pred: Grateful and thankful for her family | ref: Grateful and thankful for her family
+2026-03-12 12:17:11,336 - INFO -   Q: What was Caroline's reaction to her children enjoying the Grand Canyon?... | pred: Not mentioned in the conversation | ref: She was happy and thankful
+2026-03-12 12:17:31,945 - INFO -   Q: What did Caroline do after the road trip to relax?... | pred: Not mentioned in the conversation | ref: Went on a nature walk or hike
+2026-03-12 12:18:09,472 - INFO -   Q: What does Caroline love most about camping with her family?... | pred: Being present and bonding with her family | ref: Being present and bonding with her family
+2026-03-12 12:18:09,484 - INFO -   Graph exported: /Users/yurusong/Documents/dmem/scripts/../results/dmem/graphs/gpt-4o-mini_d-mem_noise0_s0.json
+2026-03-12 12:18:09,490 - INFO - [1/1] tokens=660169 routing={'total_turns': 419, 'skip': 6, 'construct': 366, 'evolve': 47, 'skip_pct': 1.431980906921241, 'construct_pct': 87.3508353221957, 'evolve_pct': 11.217183770883054, 'store_size': 413}
+2026-03-12 12:18:13,763 - INFO - Results saved: /Users/yurusong/Documents/dmem/scripts/../results/dmem/eval_d-mem_gpt-4o-mini_noise0_gpt-4o-mini_0312_1218.json
+2026-03-12 12:18:13,764 - INFO - Aggregate: {
+  "exact_match": {
+    "mean": 0.09547738693467336,
+    "std": 0.2946143657157042,
+    "median": 0,
+    "min": 0,
+    "max": 1,
+    "count": 199
+  },
+  "f1": {
+    "mean": 0.307020181629447,
+    "std": 0.3535814129582746,
+    "median": 0.16666666666666666,
+    "min": 0.0,
+    "max": 1.0,
+    "count": 199
+  },
+  "rouge1_f": {
+    "mean": 0.3169097888647008,
+    "std": 0.3519897586777231,
+    "median": 0.2105263157894737,
+    "min": 0.0,
+    "max": 1.0,
+    "count": 199
+  },
+  "rouge2_f": {
+    "mean": 0.20069982308274695,
+    "std": 0.33425794505295653,
+    "median": 0.0,
+    "min": 0.0,
+    "max": 1.0,
+    "count": 199
+  },
+  "rougeL_f": {
+    "mean": 0.30996059688099087,
+    "std": 0.35106399343466715,
+    "median": 0.15999999999999998,
+    "min": 0.0,
+    "max": 1.0,
+    "count": 199
+  },
+  "bleu1": {
+    "mean": 0.26094013251868453,
+    "std": 0.3255903329471165,
+    "median": 0.11764705882352941,
+    "min": 0,
+    "max": 1.0,
+    "count": 199
+  },
+  "bleu2": {
+    "mean": 0.19100326603381415,
+    "std": 0.30040480258391333,
+    "median": 0.03678794411714424,
+    "min": 0,
+    "max": 1.0,
+    "count": 199
+  },
+  "bleu3": {
+    "mean": 0.15722337344690507,
+    "std": 0.28851130568632183,
+    "median": 0.026197237902936488,
+    "min": 0,
+    "max": 1.0,
+    "count": 199
+  },
+  "bleu4": {
+    "mean": 0.12736349261989108,
+    "std": 0.2509161303827814,
+    "median": 0.020364851292391,
+    "min": 0,
+    "max": 1.0,
+    "count": 199
+  },
+  "bert_precision": {
+    "mean": 0.8992475807367257,
+    "std": 0.04914871583979615,
+    "median": 0.8860390186309814,
+    "min": 0.7898336052894592,
+    "max": 1.000000238418579,
+    "count": 199
+  },
+  "bert_recall": {
+    "mean": 0.8986608874258684,
+    "std": 0.054370602282681896,
+    "median": 0.8861128687858582,
+    "min": 0.7845765352249146,
+    "max": 1.000000238418579,
+    "count": 199
+  },
+  "bert_f1": {
+    "mean": 0.898688579024981,
+    "std": 0.04963600618090392,
+    "median": 0.8845066428184509,
+    "min": 0.8064413666725159,
+    "max": 1.000000238418579,
+    "count": 199
+  },
+  "meteor": {
+    "mean": 0.23802603033831843,
+    "std": 0.33195052875342135,
+    "median": 0.078125,
+    "min": 0.0,
+    "max": 0.9996243425995492,
+    "count": 199
+  },
+  "sbert_similarity": {
+    "mean": 0.48201826098726025,
+    "std": 0.3352224335617358,
+    "median": 0.48572203516960144,
+    "min": -0.07110869884490967,
+    "max": 1.0000001192092896,
+    "count": 199
+  }
+}

@@ -13,6 +13,7 @@ import copy
 import random
 import uuid
 import argparse
+from tqdm import tqdm
 from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'code'))
@@ -46,7 +47,7 @@ def generate_noise_turn(speaker_a, speaker_b, recent_turns, noise_type, llm) -> 
     speaker = random.choice([speaker_a, speaker_b])
     context = "\n".join(recent_turns[-3:]) if recent_turns else "(conversation just started)"
     prompt = NOISE_PROMPTS[noise_type].format(context=context, speaker=speaker)
-    text = llm.get_completion(prompt).strip().strip('"')
+    text = llm.get_completion(prompt, response_format={"type": "text"}).strip().strip('"')
     noise_id = f"NOISE:{uuid.uuid4().hex[:6]}"
     return {"speaker": speaker, "dia_id": noise_id, "text": text}
 
@@ -59,6 +60,21 @@ def inject_noise_into_dataset(raw_data, noise_ratio, llm, seed=42):
     """
     rng = random.Random(seed)
     noisy_data = copy.deepcopy(raw_data)
+
+    # Pre-count total noise turns for progress bar
+    total_noise = 0
+    for sample in noisy_data:
+        conv = sample['conversation']
+        for key in sorted(conv.keys()):
+            if not key.startswith('session_') or not isinstance(conv[key], list):
+                continue
+            turns = conv[key]
+            if not turns or len(turns) < 2:
+                continue
+            num_noise = int(len(turns) * noise_ratio)
+            total_noise += min(num_noise, len(turns) - 1)
+
+    pbar = tqdm(total=total_noise, desc=f"Generating noise ({int(noise_ratio*100)}%)", unit="turn")
 
     for sample in noisy_data:
         conv = sample['conversation']
@@ -98,7 +114,9 @@ def inject_noise_into_dataset(raw_data, noise_ratio, llm, seed=42):
                 )
                 turns.insert(insert_at, noise_turn)
                 offset += 1
+                pbar.update(1)
 
+    pbar.close()
     return noisy_data
 
 
@@ -125,6 +143,8 @@ def main():
     parser.add_argument("--api_base", type=str, default=None)
     parser.add_argument("--sglang_host", type=str, default="http://localhost")
     parser.add_argument("--sglang_port", type=int, default=30000)
+    parser.add_argument("--max_samples", type=int, default=None,
+                        help="Only process first N samples (for quick tests)")
     args = parser.parse_args()
 
     # Resolve paths relative to project root
@@ -151,6 +171,9 @@ def main():
     print(f"Loading raw dataset from {input_path}")
     with open(input_path, 'r') as f:
         raw_data = json.load(f)
+    if args.max_samples is not None:
+        raw_data = raw_data[:args.max_samples]
+        print(f"  Truncated to {len(raw_data)} samples (--max_samples {args.max_samples})")
     print(f"  Loaded {len(raw_data)} samples")
 
     # Count original turns
