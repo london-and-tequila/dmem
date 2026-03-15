@@ -14,7 +14,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from memory_layer import (
     AgenticMemorySystem, MemoryNote, LLMController,
-    SimpleEmbeddingRetriever, token_tracker,
+    SimpleEmbeddingRetriever, token_tracker, simple_tokenize,
 )
 
 
@@ -34,7 +34,7 @@ class CriticRouter:
         self.theta_low = theta_low
         self.theta_high = theta_high
         self.alpha = alpha
-        self.mode = mode  # 'rpe' | 'random' | 'surprise_only' | 'utility_only'
+        self.mode = mode  # 'rpe' | 'rpe_v2' | 'rpe_v3' | 'random' | 'surprise_only' | 'utility_only'
         self.warmup_turns = warmup_turns
         self._turn_count = 0
 
@@ -58,7 +58,15 @@ class CriticRouter:
             rpe = self._compute_surprise(content)
         elif self.mode == 'utility_only':
             rpe = self._compute_utility(content)
-        else:  # 'rpe' (default)
+        elif self.mode in ('rpe_v2', 'rpe_v3'):
+            utility = self._compute_utility(content)
+            # Hard cutoff: TRANSIENT (utility ≈ 0) → skip immediately, 0 surprise cost
+            if utility < 0.05:
+                return 0.0, 'SKIP'
+            surprise = self._compute_surprise(content)
+            beta = 0.4 if self.mode == 'rpe_v3' else 0.1
+            rpe = min(1.0, utility * (surprise + beta))
+        else:  # 'rpe' (original linear)
             surprise = self._compute_surprise(content)
             utility = self._compute_utility(content)
             rpe = self.alpha * surprise + (1 - self.alpha) * utility
@@ -94,14 +102,16 @@ class CriticRouter:
     # Utility (lightweight LLM call, ~50 tokens)
     # ------------------------------------------------------------------
     def _compute_utility(self, content: str) -> float:
-        """Structured-output LLM call to rate long-term factual value (0-10)."""
+        """Lightweight LLM call: lifecycle classification → score (no entity extraction)."""
         prompt = (
-            "Rate 0-10 the long-term memory utility of this user utterance for an AI assistant.\n"
-            "0-2: Conversational filler, meaningless chatter (e.g., 'ok', 'lol', 'thanks').\n"
-            "3-5: Vague statements or immediate context.\n"
-            "6-8: Concrete actions, events, or statements containing specific TIME markers (e.g., 'I went to pottery class yesterday').\n"
-            "9-10: Core persona facts, major preference shifts, or critical relationships.\n"
-            f"Utterance: '{content}'"
+            "Classify this utterance's long-term memory value for an AI assistant.\n\n"
+            f"Utterance: '{content}'\n\n"
+            "Lifecycle:\n"
+            "  TRANSIENT — pure filler with zero informational content "
+            "(greetings, 'ok', 'lol', 'brb', 'thanks', backchannel, weather small-talk)\n"
+            "  SHORT_TERM — days-to-weeks relevance (plans, temporary tasks, daily activities)\n"
+            "  PERSISTENT — months+ (preferences, relationships, skills, life events)\n\n"
+            "Score 0-10. If TRANSIENT, score MUST be 0."
         )
         response_format = {
             "type": "json_schema",
@@ -110,9 +120,13 @@ class CriticRouter:
                 "schema": {
                     "type": "object",
                     "properties": {
-                        "utility_score": {"type": "integer"}
+                        "lifecycle": {
+                            "type": "string",
+                            "enum": ["TRANSIENT", "SHORT_TERM", "PERSISTENT"]
+                        },
+                        "score": {"type": "integer"}
                     },
-                    "required": ["utility_score"],
+                    "required": ["lifecycle", "score"],
                     "additionalProperties": False,
                 },
                 "strict": True,
@@ -122,7 +136,10 @@ class CriticRouter:
             raw = self.llm_controller.llm.get_completion(
                 prompt, response_format=response_format, temperature=0.0
             )
-            score = json.loads(raw).get("utility_score", 5)
+            parsed = json.loads(raw)
+            if parsed.get("lifecycle") == "TRANSIENT":
+                return 0.0
+            score = parsed.get("score", 5)
             return max(0.0, min(1.0, score / 10.0))
         except Exception:
             return 0.5  # neutral fallback
@@ -176,7 +193,8 @@ class DopamineMemorySystem(AgenticMemorySystem):
             mode=rpe_mode,
             warmup_turns=warmup_turns,
         )
-        self.stm_buffer: deque = deque(maxlen=50)
+        self.stm_buffer: deque = deque(maxlen=200)
+        self.stm_embeddings = None  # numpy array, parallel to stm_buffer
         self.routing_stats = {
             'skip': 0, 'construct': 0, 'evolve': 0,
             'per_step': [],
@@ -194,6 +212,15 @@ class DopamineMemorySystem(AgenticMemorySystem):
         if tier == 'SKIP':
             # Tier 1: store in STM only, 0 extra LLM calls
             self.stm_buffer.append(content)
+            # Local SentenceTransformer encode — zero LLM token cost
+            emb = self.router.retriever.model.encode([content])
+            if self.stm_embeddings is None:
+                self.stm_embeddings = emb
+            else:
+                self.stm_embeddings = np.vstack([self.stm_embeddings, emb])
+            # deque auto-evicts from left; keep embeddings in sync
+            while self.stm_embeddings is not None and len(self.stm_embeddings) > len(self.stm_buffer):
+                self.stm_embeddings = self.stm_embeddings[1:]
             self.routing_stats['skip'] += 1
 
         elif tier == 'CONSTRUCT_ONLY':
@@ -205,6 +232,8 @@ class DopamineMemorySystem(AgenticMemorySystem):
                    " keywords: " + ", ".join(note.keywords) +
                    " tags: " + ", ".join(note.tags))
             self.retriever.add_documents([doc])
+            self.bm25_corpus_tokens.append(simple_tokenize(doc.lower()))
+            self._bm25_dirty = True
             note_id = note.id
             self.routing_stats['construct'] += 1
 
@@ -239,7 +268,31 @@ class DopamineMemorySystem(AgenticMemorySystem):
             'construct_pct': self.routing_stats['construct'] / max(total, 1) * 100,
             'evolve_pct': self.routing_stats['evolve'] / max(total, 1) * 100,
             'store_size': len(self.memories),
+            'per_step': self.routing_stats['per_step'],
         }
+
+    def find_related_memories_raw(self, query: str, k: int = 5) -> str:
+        """Graph retrieval (RRF fusion) + STM shadow buffer fallback."""
+        # Semantic top score for confidence check
+        _, scores = self.retriever.search(query, k)
+        max_score = float(scores[0]) if len(scores) > 0 else 0.0
+
+        # Parent RRF fusion + temporal sort
+        memory_str = super().find_related_memories_raw(query, k)
+
+        # STM fallback: when graph confidence is low, search skipped content
+        if (max_score < 0.35 and self.stm_embeddings is not None
+                and len(self.stm_buffer) > 0):
+            query_emb = self.router.retriever.model.encode([query])
+            stm_sims = cosine_similarity(query_emb, self.stm_embeddings)[0]
+            stm_top = np.argsort(stm_sims)[-min(3, len(self.stm_buffer)):][::-1]
+            stm_items = list(self.stm_buffer)
+            hits = [stm_items[idx] for idx in stm_top if stm_sims[idx] > 0.2]
+            if hits:
+                memory_str += "\n--- Recent skipped context ---\n"
+                memory_str += "\n".join(hits) + "\n"
+
+        return memory_str
 
     def export_graph_json(self) -> dict:
         """Export graph with D-MEM routing metadata and STM buffer info."""

@@ -413,7 +413,7 @@ class RobustAgenticMemorySystem:
         if not self.memories:
             return "", []
 
-        indices = self.retriever.search(query, k)
+        indices, _scores = self.retriever.search(query, k)
         all_memories = list(self.memories.values())
         memory_str = ""
         for i in indices:
@@ -432,7 +432,7 @@ class RobustAgenticMemorySystem:
         if not self.memories:
             return ""
 
-        indices = self.retriever.search(query, k)
+        indices, _scores = self.retriever.search(query, k)
         all_memories = list(self.memories.values())
         memory_str = ""
         for i in indices:

@@ -137,6 +137,8 @@ class MemGPTAgent:
 
 DMEM_ABLATIONS = {
     'D-MEM':       {'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.7, 'rpe_mode': 'rpe'},
+    'D-MEM-v2':    {'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.7, 'rpe_mode': 'rpe_v2'},
+    'D-MEM-v3':    {'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.7, 'rpe_mode': 'rpe_v3'},
     'D-MEM-rand':  {'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.7, 'rpe_mode': 'random'},
     'D-MEM-high':  {'alpha': 0.6, 'theta_low': 0.3, 'theta_high': 0.9, 'rpe_mode': 'rpe'},
     'D-MEM-surp':  {'alpha': 1.0, 'theta_low': 0.3, 'theta_high': 0.7, 'rpe_mode': 'surprise_only'},

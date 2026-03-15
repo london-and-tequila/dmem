@@ -18,8 +18,18 @@ paper/*.blg
 paper/*.synctex.gz
 paper/missfont.log
 
+# Wandb logs
+wandb/
+
+# LLM cache
+code/.llm_cache.db
+
+# Generated figures
+*.pdf
+
 # Claude Code local config
 .claude/
 
 # OS
 .DS_Store
+.env

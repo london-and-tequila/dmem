@@ -266,7 +266,7 @@ def main():
     parser.add_argument("--noise", type=int, default=None,
                         help="Alias for --noise_ratio")
     parser.add_argument("--router_mode", type=str, default=None,
-                        choices=["rpe", "random", "surprise_only", "utility_only"],
+                        choices=["rpe", "rpe_v2", "rpe_v3", "random", "surprise_only", "utility_only"],
                         help="RPE router mode for D-MEM ablation")
     parser.add_argument("--alpha", type=float, default=0.6,
                         help="RPE alpha (surprise vs utility weight)")

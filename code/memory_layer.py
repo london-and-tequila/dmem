@@ -701,29 +701,19 @@ class SimpleEmbeddingRetriever:
             for idx, doc in enumerate(documents):
                 self.document_ids[doc] = start_idx + idx
     
-    def search(self, query: str, k: int = 5) -> List[Dict[str, float]]:
+    def search(self, query: str, k: int = 5):
         """Search for similar documents using cosine similarity.
-        
-        Args:
-            query: Query text
-            k: Number of results to return
-            
+
         Returns:
-            List of dicts with document text and score
+            (top_k_indices, top_k_scores) — both numpy arrays
         """
         if not self.corpus:
-            return []
-        # print("corpus", len(self.corpus), self.corpus)
-        # Encode query
+            return [], np.array([])
         query_embedding = self.model.encode([query])[0]
-        
-        # Calculate cosine similarities
         similarities = cosine_similarity([query_embedding], self.embeddings)[0]
-        # Get top k results
         top_k_indices = np.argsort(similarities)[-k:][::-1]
-        
-            
-        return top_k_indices
+        top_k_scores = similarities[top_k_indices]
+        return top_k_indices, top_k_scores
         
     def save(self, retriever_cache_file: str, retriever_cache_embeddings_file: str):
         """Save retriever state to disk"""
@@ -824,8 +814,13 @@ class AgenticMemorySystem:
                                     "new_tags_neighborhood": [["tag_1",...,"tag_n"],...["tag_1",...,"tag_n"]],
                                 }}
                                 '''
-        self.evo_cnt = 0 
+        self.evo_cnt = 0
         self.evo_threshold = evo_threshold
+
+        # BM25 parallel index (lazy build)
+        self.bm25_corpus_tokens = []
+        self.bm25_index = None
+        self._bm25_dirty = True
 
     def add_note(self, content: str, time: str = None, **kwargs) -> str:
         """Add a new memory note"""
@@ -835,7 +830,10 @@ class AgenticMemorySystem:
         # all_docs = [m.content for m in self.memories.values()]
         evo_label, note = self.process_memory(note)
         self.memories[note.id] = note
-        self.retriever.add_documents(["content:" + note.content + " context:" + note.context + " keywords: " + ", ".join(note.keywords) + " tags: " + ", ".join(note.tags)])
+        doc = "content:" + note.content + " context:" + note.context + " keywords: " + ", ".join(note.keywords) + " tags: " + ", ".join(note.tags)
+        self.retriever.add_documents([doc])
+        self.bm25_corpus_tokens.append(simple_tokenize(doc.lower()))
+        self._bm25_dirty = True
         if evo_label == True:
             self.evo_cnt += 1
             if self.evo_cnt % self.evo_threshold == 0:
@@ -865,7 +863,15 @@ class AgenticMemorySystem:
             metadata_text = f"{memory.context} {' '.join(memory.keywords)} {' '.join(memory.tags)}"
             # Add both the content and metadata as separate documents for better retrieval
             self.retriever.add_documents([memory.content + " , " + metadata_text])
-    
+
+        # Rebuild BM25 token list
+        self.bm25_corpus_tokens = []
+        for memory in self.memories.values():
+            metadata_text = f"{memory.context} {' '.join(memory.keywords)} {' '.join(memory.tags)}"
+            doc = memory.content + " , " + metadata_text
+            self.bm25_corpus_tokens.append(simple_tokenize(doc.lower()))
+        self._bm25_dirty = True
+
     def process_memory(self, note: MemoryNote) -> bool:
         """Process a memory note and return an evolution label"""
         neighbor_memory, indices = self.find_related_memories(note.content, k=5)
@@ -978,39 +984,64 @@ class AgenticMemorySystem:
             return "",[]
             
         # Get indices of related memories
-        # indices = self.retriever.retrieve(query_note.content, k)
-        indices = self.retriever.search(query, k)
-        
+        indices, _scores = self.retriever.search(query, k)
+
         # Convert to list of memories
         all_memories = list(self.memories.values())
         memory_str = ""
-        # print("indices", indices)
-        # print("all_memories", all_memories)
         for i in indices:
             memory_str += "memory index:" + str(i) + "\t talk start time:" + all_memories[i].timestamp + "\t memory content: " + all_memories[i].content + "\t memory context: " + all_memories[i].context + "\t memory keywords: " + str(all_memories[i].keywords) + "\t memory tags: " + str(all_memories[i].tags) + "\n"
         return memory_str, indices
 
-    def find_related_memories_raw(self, query: str, k: int = 5) -> List[MemoryNote]:
-        """Find related memories using hybrid retrieval"""
+    def _ensure_bm25(self):
+        if self._bm25_dirty and self.bm25_corpus_tokens:
+            self.bm25_index = BM25Okapi(self.bm25_corpus_tokens)
+            self._bm25_dirty = False
+
+    def find_related_memories_raw(self, query: str, k: int = 5) -> str:
+        """Find related memories using RRF fusion (semantic + BM25) + temporal sort."""
         if not self.memories:
-            return []
-            
-        # Get indices of related memories
-        # indices = self.retriever.retrieve(query_note.content, k)
-        indices = self.retriever.search(query, k)
-        
-        # Convert to list of memories
+            return ""
+
+        # Semantic retrieval
+        indices_sem, scores_sem = self.retriever.search(query, k * 2)
+
+        # BM25 retrieval
+        self._ensure_bm25()
+        indices_bm25 = []
+        if self.bm25_index is not None:
+            bm25_scores = self.bm25_index.get_scores(simple_tokenize(query.lower()))
+            indices_bm25 = np.argsort(bm25_scores)[-k * 2:][::-1].tolist()
+
+        # RRF fusion: score = Σ 1/(rank + 60)
+        rrf = {}
+        for rank, idx in enumerate(indices_sem):
+            rrf[int(idx)] = rrf.get(int(idx), 0) + 1.0 / (rank + 60)
+        for rank, idx in enumerate(indices_bm25):
+            rrf[int(idx)] = rrf.get(int(idx), 0) + 1.0 / (rank + 60)
+
+        fused = sorted(rrf, key=rrf.get, reverse=True)[:k]
+
+        # Temporal sort
         all_memories = list(self.memories.values())
+        fused_sorted = sorted(fused, key=lambda i: all_memories[i].timestamp)
+
+        # Build result string
         memory_str = ""
-        for i in indices:
-            j = 0
-            memory_str +=  "talk start time:" + all_memories[i].timestamp + "memory content: " + all_memories[i].content + "memory context: " + all_memories[i].context + "memory keywords: " + str(all_memories[i].keywords) + "memory tags: " + str(all_memories[i].tags) + "\n"
-            neighborhood = all_memories[i].links
-            for neighbor in neighborhood:
-                memory_str += "talk start time:" + all_memories[neighbor].timestamp + "memory content: " + all_memories[neighbor].content + "memory context: " + all_memories[neighbor].context + "memory keywords: " + str(all_memories[neighbor].keywords) + "memory tags: " + str(all_memories[neighbor].tags) + "\n"
-                if j >=k:
+        for i in fused_sorted:
+            memory_str += ("talk start time:" + all_memories[i].timestamp +
+                           "memory content: " + all_memories[i].content +
+                           "memory context: " + all_memories[i].context +
+                           "memory keywords: " + str(all_memories[i].keywords) +
+                           "memory tags: " + str(all_memories[i].tags) + "\n")
+            for j, neighbor in enumerate(all_memories[i].links):
+                if j >= k:
                     break
-                j += 1
+                memory_str += ("talk start time:" + all_memories[neighbor].timestamp +
+                               "memory content: " + all_memories[neighbor].content +
+                               "memory context: " + all_memories[neighbor].context +
+                               "memory keywords: " + str(all_memories[neighbor].keywords) +
+                               "memory tags: " + str(all_memories[neighbor].tags) + "\n")
         return memory_str
 
     def export_graph_json(self) -> dict:
