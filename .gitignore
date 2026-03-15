@@ -8,15 +8,8 @@ code/cached_memories_*/
 code/logs/
 code/results/
 
-# LaTeX build artifacts
-paper/*.aux
-paper/*.log
-paper/*.out
-paper/*.pdf
-paper/*.bbl
-paper/*.blg
-paper/*.synctex.gz
-paper/missfont.log
+# Paper (entire folder)
+paper/
 
 # Wandb logs
 wandb/
